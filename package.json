@@ -1,0 +1,106 @@
+{
+  "name": "sistema-solar-interativo",
+  "version": "6.36.0",
+  "description": "<p align=\"center\">\r   <img src=\"https://img.shields.io/badge/Tecnologia-Three.js-blue?style=for-the-badge&logo=threedots&logoColor=white\" />\r   <img src=\"https://img.shields.io/badge/Linguagem-JavaScript%20(ES6)-yellow?style=for-the-badge&logo=javascript\" />\r   <img src=\"https://img.shields.io/badge/Modelo%20de%20Luz-Físico%20(AM0)-brightgreen?style=for-the-badge\" />\r </p>",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win portable nsis",
+    "prestart": "node update-version.js",
+    "prepare": "husky",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{js,mjs,json,md,css,html}\"",
+    "format:check": "prettier --check \"**/*.{js,mjs,json,md,css,html}\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vuenar/Sistema_Solar_Interativo_ADS.git"
+  },
+  "keywords": [
+    "electron",
+    "threejs"
+  ],
+  "author": "",
+  "license": "ISC",
+  "build": {
+    "appId": "com.vuenar.universointerativo",
+    "productName": "Universo Interativo",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json",
+      "logo_atom.png",
+      "logo_estacio.png",
+      "public/**/*",
+      "src/**/*",
+      "ui/**/*",
+      "utils/**/*",
+      "!Backup{,/**}",
+      "!build{,/**}",
+      "!dist{,/**}",
+      "!.git{,/**}",
+      "!.history{,/**}",
+      "!node_modules/.cache{,/**}"
+    ],
+    "asar": true,
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Universo-Interativo-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Universo Interativo"
+    }
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "three": "0.126.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "electron": "^38.2.2",
+    "electron-builder": "^26.0.12",
+    "eslint": "^10.2.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.4.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.2"
+  },
+  "bugs": {
+    "url": "https://github.com/Vuenar/Sistema_Solar_Interativo_ADS/issues"
+  },
+  "homepage": "https://github.com/Vuenar/Sistema_Solar_Interativo_ADS#readme",
+  "lint-staged": {
+    "*.{js,mjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css,html}": [
+      "prettier --write"
+    ]
+  }
+}

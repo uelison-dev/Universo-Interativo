@@ -1,0 +1,10 @@
+Backup/
+.git/
+.history/
+node_modules/
+build/
+dist/
+docs/
+public/assets/
+public/sound/
+public/scripts/config.js

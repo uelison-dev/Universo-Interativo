@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inspecao de objeto celeste</title>
+    <link rel="stylesheet" href="./black-hole.css" />
+  </head>
+  <body>
+    <main class="viewer-shell">
+      <section class="viewer-stage" aria-label="Visualizacao tridimensional do buraco negro">
+        <div class="stage-copy">
+          <span class="eyebrow">Inspecao celeste</span>
+          <h1 id="black-hole-name">Carregando...</h1>
+          <p id="black-hole-type">Aguardando dados do objeto</p>
+        </div>
+        <div class="stage-hint">Arraste para orbitar · roda do mouse para aproximar</div>
+        <div class="viewer-controls" aria-label="Controles da visualizacao">
+          <button id="viewer-visibility" type="button" aria-label="Mostrar ou ocultar orbita" title="Visibilidade">O</button>
+          <button id="viewer-info" type="button" aria-label="Mostrar ou ocultar informacoes" title="Informacoes">i</button>
+          <button id="viewer-zoom-in" type="button" aria-label="Aproximar" title="Aproximar">+</button>
+          <button id="viewer-zoom-out" type="button" aria-label="Afastar" title="Afastar">-</button>
+          <button id="viewer-camera" type="button" aria-label="Alternar camera automatica" title="Camera">C</button>
+        </div>
+        <div id="satellite-switcher" class="satellite-switcher" hidden>
+          <div class="satellite-heading">
+            <span>Satélites</span>
+            <strong id="satellite-count">0</strong>
+          </div>
+          <div id="satellite-buttons" class="satellite-buttons"></div>
+        </div>
+        <button id="close-viewer" class="close-viewer" type="button">Voltar para a galaxia</button>
+      </section>
+
+      <aside class="data-panel">
+        <div class="panel-kicker">Dados catalogados</div>
+        <h2>Propriedades</h2>
+        <dl id="black-hole-details" class="details-list"></dl>
+        <div class="panel-note">
+          <span class="signal-dot"></span>
+          <span>Modelo visual em escala de inspeção</span>
+        </div>
+      </aside>
+    </main>
+    <script type="module" src="./scripts/black-hole-viewer.js"></script>
+  </body>
+</html>

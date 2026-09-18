@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema Solar Interativo</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/png" href="logo_atom.png" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+  </head>
+
+  <body>
+    <div id="footer-meta" class="footer-meta-group">
+      <div id="datetime-container">
+        <div id="current-date" class="datetime-display"></div>
+        <div id="current-time" class="datetime-display"></div>
+      </div>
+      <div id="version-display" class="version-display"></div>
+    </div>
+
+    <div id="ui-container">
+      <div id="ai-interface">
+        <div id="search-container">
+          <input type="text" id="search-input" placeholder="Pesquise por planetas e objetos..." />
+        </div>
+        <ul id="search-results"></ul>
+      </div>
+
+      <div class="legend-group">
+        <div class="info-overlay" id="navigation-legend">
+          <div class="overlay-header">
+            <h2 class="overlay-title">Informações</h2>
+          </div>
+          <div class="overlay-content">
+            <div class="navigation-section">
+              <h3>Controles da Câmera</h3>
+              <ul>
+                <li><span class="action">Girar:</span> Arraste o botão esquerdo do mouse.</li>
+                <li><span class="action">Zoom:</span> Use a roda do mouse.</li>
+                <li><span class="action">Mover:</span> Arraste o botão direito do mouse.</li>
+              </ul>
+            </div>
+
+            <hr class="separator" />
+
+            <div class="object-section">
+              <h3>Objetos na Cena</h3>
+              <ul>
+                <li><span class="object-info">Linhas brancas:</span> Órbitas dos Planetas.</li>
+                <li>
+                  <span class="object-info">Rastro dos planetas:</span> Trajetória deixada para
+                  trás.
+                </li>
+                <li>
+                  <span class="object-info">Cinturão de asteroides:</span> Entre Marte e Júpiter.
+                </li>
+                <li>
+                  <span class="object-info">Rastro dos cometas:</span> Cauda de íons e poeira.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="planet-info-overlay" class="info-overlay planet-info-overlay-top-right">
+      <div class="overlay-header">
+        <div id="planet-image-container">
+          <img id="planet-image-icon" src="" alt="Representação do objeto" />
+        </div>
+        <h2 id="planet-name" class="overlay-title"></h2>
+      </div>
+      <div class="overlay-content">
+        <ul id="planet-details"></ul>
+      </div>
+    </div>
+
+    <div id="controls-container">
+      <div class="tooltip-container">
+        <span class="tooltip-text">Visibilidade</span>
+        <button id="visibility-btn" class="square-button" aria-label="Controle de Visibilidade">
+          <i class="fas fa-eye"></i>
+        </button>
+      </div>
+
+      <div id="visibility-menu" class="visibility-menu">
+        <label class="checkbox-container">
+          <input type="checkbox" id="toggle-planets-orbits" />
+          <span class="checkmark"></span>
+          Órbita - Planetas
+        </label>
+        <label class="checkbox-container">
+          <input type="checkbox" id="toggle-major-tnos-orbits" />
+          <span class="checkmark"></span>
+          Órbita - Planetas-Anões
+        </label>
+        <label class="checkbox-container">
+          <input type="checkbox" id="toggle-tnos-orbits" />
+          <span class="checkmark"></span>
+          Órbita - TNOs
+        </label>
+        <label class="checkbox-container">
+          <input type="checkbox" id="toggle-comets-orbits" />
+          <span class="checkmark"></span>
+          Órbita - Cometas
+        </label>
+      </div>
+
+      <div class="tooltip-container">
+        <span class="tooltip-text">Controle de Áudio</span>
+        <button id="reopen-audio-btn" class="square-button" aria-label="Controle de Áudio">
+          <i class="fas fa-music"></i>
+        </button>
+      </div>
+
+      <div class="tooltip-container">
+        <span class="tooltip-text">Informações</span>
+        <button
+          id="info-btn"
+          class="square-button nav-toggle-btn"
+          aria-label="Informações e Navegação"
+        >
+          <i class="fas fa-info"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="audio-controls" class="audio-controls">
+      <div class="audio-info">
+        <span id="audio-title">Nenhuma Música Carregada</span>
+      </div>
+      <div class="audio-buttons">
+        <button id="prev-btn" class="square-button" aria-label="Faixa Anterior">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+          </svg>
+        </button>
+        <button id="play-pause-btn" class="square-button" aria-label="Tocar/Pausar">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path id="play-icon" d="M8 5v14l11-7z" style="display: block" />
+            <path id="pause-icon" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" style="display: none" />
+          </svg>
+        </button>
+        <button id="next-btn" class="square-button" aria-label="Próxima Faixa">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M6 18l8.5-6L6 6v12zm6.5-6L21 6v12l-8.5-6z" />
+          </svg>
+        </button>
+        <div class="separator"></div>
+
+        <div class="volume-control-container">
+          <button id="mute-btn" class="square-button" aria-label="Mudo/Volume">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                id="volume-icon"
+                d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.74 2.5-2.26 2.5-4.02zM14 3.23v2.06c2.89.81 5 3.54 5 6.71s-2.11 5.9-5 6.71v2.06c4.01-.91 7-4.45 7-8.77s-2.99-7.86-7-8.77z"
+                style="display: block"
+              />
+              <path
+                id="mute-icon"
+                d="M12 4L7 9H3v6h4l5 5zM12 4L7 9H3v6h4l5 5z"
+                style="display: none"
+              />
+            </svg>
+          </button>
+          <input
+            type="range"
+            id="volume-slider"
+            min="0"
+            max="100"
+            value="100"
+            class="volume-slider"
+          />
+        </div>
+
+        <button id="close-audio-btn" class="square-button" aria-label="Fechar">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="zoom-controls-container">
+      <div id="scale-display">ESCALA: 1.0x</div>
+      <button id="zoom-in-btn" class="square-button zoom-button">
+        <i class="fas fa-search-plus"></i>
+      </button>
+      <button id="zoom-out-btn" class="square-button zoom-button">
+        <i class="fas fa-search-minus"></i>
+      </button>
+      <button
+        id="toggle-camera-btn"
+        class="square-button zoom-button"
+        aria-label="Alternar Câmera Livre"
+      >
+        <i class="fas fa-satellite-dish"></i>
+      </button>
+    </div>
+
+    <script type="module" src="./scripts/app.js"></script>
+
+    <div id="labels-container"></div>
+  </body>
+</html>
