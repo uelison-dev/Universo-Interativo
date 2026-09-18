@@ -1,4 +1,4 @@
-gi# Arquivos temporários
+# Arquivos temporários
 *.log
 *.tmp
 __pycache__/
@@ -12,12 +12,13 @@ out/
 Backup/
 .husky/_/
 
+# Variáveis de ambiente e informações sensíveis
+.env
+.env.local
+.env.*.local
+
 # VS Code
 .vscode/
-
-# Logs e temporários
-*.log
-*.tmp
 
 # Sistema
 .DS_Store
