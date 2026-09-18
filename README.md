@@ -77,9 +77,8 @@ Os arquivos `.exe` serão gerados na pasta `dist/`, incluindo uma versão portá
 
 ---
 
-## Equipe de Desenvolvimento
+## Desenvolvedor
 
 - Uelison Couto - https://github.com/Vuenar
-- Leo Raibolt - https://github.com/LeoRaibolt
 
 Versão atual: 6.36.0
