@@ -79,6 +79,6 @@ Os arquivos `.exe` serão gerados na pasta `dist/`, incluindo uma versão portá
 
 ## Desenvolvedor
 
-- Uelison Couto - https://github.com/uelison-dev
+- Uelison Ferreira - https://github.com/uelison-dev
 
 Versão atual: 6.36.0
