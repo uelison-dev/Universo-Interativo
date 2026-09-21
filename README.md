@@ -39,7 +39,7 @@ O projeto agora utiliza um launcher nativo em Electron, sem dependência de Pyth
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/Vuenar/Project_SSI.git
+git clone https://github.com/uelison-dev/Universo-Interativo.git
 ```
 
 2. Instale as dependências:
