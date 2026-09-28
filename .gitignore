@@ -11,6 +11,7 @@ out/
 .history/
 Backup/
 .husky/_/
+.husky/
 
 # Variáveis de ambiente e informações sensíveis
 .env
