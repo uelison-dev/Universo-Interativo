@@ -1,4 +1,4 @@
-# Projeto Solar Interativo - Versão Beta
+# 🌌 Universo Interativo — Versão Beta
 
 <p align="center">
   <img src="https://img.shields.io/badge/Tecnologia-Three.js-blue?style=for-the-badge&logo=threedots&logoColor=white" />
@@ -10,76 +10,139 @@
   <img src="https://img.shields.io/badge/Status-Em_Desenvolvimento-orange.svg" />
 </p>
 
-Este projeto é um modelo de simulação 3D do Sistema Solar em desenvolvimento, utilizando Three.js para visualização e renderização. O objetivo é oferecer uma experiência interativa e imersiva, com ênfase na precisão física da iluminação e das órbitas.
+O **Universo Interativo** é um projeto de simulação e exploração 3D do Sistema Solar em desenvolvimento, utilizando **Three.js** para visualização e renderização.
+
+O objetivo é oferecer uma experiência interativa e imersiva, combinando visualização 3D, dados astronômicos, navegação livre e recursos de exploração espacial, com atenção à iluminação e às escalas utilizadas na experiência.
 
 ---
 
-## Destaques da Versão Beta
+## 🚀 Destaques da Versão Beta
 
-### 1. Modelo de Iluminação Fisicamente Preciso
+### ☀️ Modelo de Iluminação Fisicamente Preciso
 - Irradiância realista com base na constante solar.
 - Materiais PBR com albedo físico.
 - Representação em condição AM0.
 
-### 2. Navegação e Interatividade
+### 🛰️ Navegação e Interatividade
 - Câmera com foco suave em objetos selecionados.
 - Alternância entre câmera guiada e câmera livre.
 - Labels dinâmicos com oclusão por raycasting.
+- Exploração de diferentes regiões e objetos da cena.
 
-### 3. Conteúdo Astronômico Detalhado
+### 🌌 Conteúdo Astronômico
 - Planetas, luas, TNOs, cometas e buracos negros.
 - Overlays informativos com dados astronômicos.
 - Transição entre escala do Sistema Solar e escala interestelar.
 
 ---
 
-## Como Executar o Projeto
+## 🛠️ Tecnologias
 
-O projeto agora utiliza um launcher nativo em Electron, sem dependência de Python para iniciar a experiência.
+- **JavaScript (ES6)**
+- **Three.js**
+- **Electron**
+- **HTML5 / CSS3**
+- **Node.js / npm**
+- **WebGL**
 
-1. Clone o repositório:
+---
+
+## 💻 Como Executar
+
+### 1. Clone o repositório
+
 ```bash
-git clone https://github.com/Vuenar/Project_SSI.git
+git clone https://github.com/uelison-dev/Universo-Interativo.git
+cd Universo-Interativo
 ```
 
-2. Instale as dependências:
+### 2. Instale as dependências
+
 ```bash
 npm install
 ```
 
-3. Inicie o aplicativo:
+### 3. Inicie o aplicativo
+
 ```bash
 npm start
 ```
 
-4. Use o launcher inicial:
-A janela de abertura do app permite iniciar a experiência principal com um clique em `Iniciar Exploração`.
+A janela inicial do aplicativo permite iniciar a experiência principal por meio do launcher.
 
-5. Gere o aplicativo clicável do Windows:
+### 4. Gere o aplicativo para Windows
+
 ```bash
 npm run dist:win
 ```
 
-Os arquivos `.exe` serão gerados na pasta `dist/`, incluindo uma versão portátil e um instalador.
+Os arquivos de distribuição serão gerados na pasta `dist/`, conforme a configuração do projeto.
 
 ---
 
-## Estrutura do Código
+## 📁 Estrutura do Código
 
-| Arquivo | Função Principal |
+| Arquivo | Função principal |
 | :--- | :--- |
-| `main.js` | Inicializa o Electron, abre o launcher inicial e carrega a experiência principal. |
-| `public/launcher.html` | Estrutura do novo launcher nativo do aplicativo. |
+| `main.js` | Inicializa o Electron, abre o launcher e carrega a experiência principal. |
+| `public/launcher.html` | Estrutura do launcher nativo do aplicativo. |
 | `public/index.html` | Estrutura principal da experiência 3D. |
-| `public/style.css` | Interface sobreposta à cena 3D. |
-| `public/scripts/app.js` | Núcleo da cena, da câmera, da seleção e dos overlays. |
-| `src/data/*.js` | Catálogo astronômico usado pelos objetos da cena. |
+| `public/style.css` | Estilos da interface sobreposta à cena 3D. |
+| `public/scripts/app.js` | Núcleo da cena, câmera, seleção e overlays. |
+| `src/data/*.js` | Catálogo astronômico utilizado pelos objetos da cena. |
 
 ---
 
-## Equipe de Desenvolvimento
+## 🖼️ Créditos e Recursos de Terceiros
 
-- Uelison Couto - https://github.com/Vuenar
-- Leo Raibolt - https://github.com/LeoRaibolt
+O projeto utiliza uma combinação de **código e recursos originais** e **materiais de terceiros**. As condições de uso de cada material devem ser respeitadas individualmente.
 
-Versão atual: 6.36.0
+### 🌍 Solar System Scope
+
+Algumas texturas planetárias utilizadas no projeto foram obtidas do **Solar System Scope — Solar Textures**.
+
+Segundo a página oficial do recurso, essas texturas são distribuídas sob a **Creative Commons Attribution 4.0 International (CC BY 4.0)**, que permite uso, adaptação e compartilhamento, inclusive comercial, desde que a atribuição correspondente seja mantida.
+
+- Fonte: https://www.solarsystemscope.com/textures/
+- Licença: https://creativecommons.org/licenses/by/4.0/
+
+### 🤖 Imagens geradas com Google Gemini
+
+Algumas imagens e elementos visuais utilizados no projeto foram gerados com auxílio do **Google Gemini**, a partir de prompts desenvolvidos durante a criação do Universo Interativo.
+
+O Google informa que não reivindica a propriedade do conteúdo do usuário em seus serviços, mas o uso, publicação e eventual comercialização de conteúdo gerado devem continuar observando os Termos de Serviço aplicáveis e os direitos de terceiros.
+
+Além disso, imagens geradas pelos aplicativos Gemini podem conter mecanismos de procedência, como **SynthID** e **Content Credentials (C2PA)**.
+
+- Gemini: https://gemini.google.com/
+- Termos do Google: https://policies.google.com/terms
+- Informações sobre geração de imagens: https://support.google.com/gemini/answer/14286560
+
+> **Importante:** a indicação de que uma imagem foi gerada com IA não significa, por si só, que todos os direitos sobre elementos representados na imagem pertençam ao projeto. Recursos que reproduzam personagens, marcas, obras ou outros elementos protegidos de terceiros devem ser avaliados separadamente.
+
+Para uma descrição mais detalhada dos materiais de terceiros, consulte [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
+
+---
+
+## 📄 Licença
+
+O **código-fonte e os materiais originais do Universo Interativo são proprietários**.
+
+Este repositório público é disponibilizado principalmente para **portfólio, visualização e avaliação do projeto**. A publicação do código no GitHub não concede autorização para copiar, modificar, redistribuir, comercializar ou incorporar o projeto em outros produtos ou serviços.
+
+Os materiais de terceiros presentes no projeto **não estão abrangidos pela licença proprietária do projeto** e permanecem sujeitos às suas respectivas licenças e termos de uso.
+
+Consulte o arquivo [`LICENSE`](LICENSE) para os termos completos e [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md) para os créditos e licenças de terceiros.
+
+---
+
+## 👨‍💻 Desenvolvimento
+
+**Uelison Ferreira**  
+GitHub: https://github.com/uelison-dev
+
+---
+
+**Versão atual:** 6.36.0
+
+© 2026 Uelison Ferreira. Todos os direitos reservados.
