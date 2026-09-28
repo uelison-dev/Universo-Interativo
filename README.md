@@ -47,22 +47,31 @@ O objetivo é oferecer uma experiência interativa e imersiva, combinando visual
 
 ---
 
-## 💻 Como Executar
+## 💻 Instalação e Uso
 
-### 1. Clone o repositório
+### 🪟 Windows — Usuários
 
-```bash
-git clone https://github.com/uelison-dev/Universo-Interativo.git
-cd Universo-Interativo
-```
+Para utilizar o **Universo Interativo**, baixe o instalador da versão desejada na página de **Releases** do GitHub.
 
-### 2. Instale as dependências
+1. Acesse a página de [Releases](https://github.com/uelison-dev/Universo-Interativo/releases).
+2. Escolha a versão que deseja instalar.
+3. Baixe o arquivo `.exe` disponibilizado nos arquivos da release.
+4. Execute o instalador e siga as instruções apresentadas.
+5. Após a instalação, abra o **Universo Interativo** pelo atalho criado no Windows.
+
+> **Importante:** o instalador é destinado aos usuários finais. O código-fonte disponibilizado neste repositório é apresentado publicamente para fins de portfólio, visualização e avaliação, conforme os termos definidos no arquivo `LICENSE`.
+
+### 🧑‍💻 Desenvolvimento
+
+O projeto utiliza **Electron, Node.js e npm**. Os comandos abaixo são destinados ao desenvolvimento e à geração do aplicativo, não sendo necessários para o usuário final.
+
+#### Instalar dependências
 
 ```bash
 npm install
 ```
 
-### 3. Inicie o aplicativo
+#### Executar em modo de desenvolvimento
 
 ```bash
 npm start
@@ -70,13 +79,33 @@ npm start
 
 A janela inicial do aplicativo permite iniciar a experiência principal por meio do launcher.
 
-### 4. Gere o aplicativo para Windows
+#### Gerar o instalador para Windows
 
 ```bash
 npm run dist:win
 ```
 
 Os arquivos de distribuição serão gerados na pasta `dist/`, conforme a configuração do projeto.
+
+> A pasta `dist/` contém arquivos gerados durante o processo de build. Para distribuição aos usuários, recomenda-se publicar o instalador como um **asset de uma GitHub Release**, em vez de versionar todo o conteúdo de `dist/` no repositório.
+
+---
+
+## 📦 Downloads e Releases
+
+As versões distribuíveis do **Universo Interativo** são disponibilizadas por meio das **GitHub Releases**.
+
+Cada release representa uma versão específica do aplicativo e pode conter o instalador correspondente para Windows.
+
+Exemplo:
+
+```text
+Releases
+└── v6.36.0
+    └── Universo-Interativo-Setup-6.36.0.exe
+```
+
+> **Observação:** `Releases` não é uma pasta que precisa ser criada dentro do projeto. É uma área própria do GitHub associada ao repositório. Os arquivos de instalação são anexados diretamente à release.
 
 ---
 
@@ -110,7 +139,7 @@ Segundo a página oficial do recurso, essas texturas são distribuídas sob a **
 
 Algumas imagens e elementos visuais utilizados no projeto foram gerados com auxílio do **Google Gemini**, a partir de prompts desenvolvidos durante a criação do Universo Interativo.
 
-O Google informa que não reivindica a propriedade do conteúdo do usuário em seus serviços, mas o uso, publicação e eventual comercialização de conteúdo gerado devem continuar observando os Termos de Serviço aplicáveis e os direitos de terceiros.
+O uso, publicação e eventual comercialização de conteúdo gerado deve observar os termos aplicáveis ao serviço utilizado e os direitos de terceiros.
 
 Além disso, imagens geradas pelos aplicativos Gemini podem conter mecanismos de procedência, como **SynthID** e **Content Credentials (C2PA)**.
 
