@@ -19,17 +19,20 @@ O objetivo é oferecer uma experiência interativa e imersiva, combinando visual
 ## 🚀 Destaques da Versão Beta
 
 ### ☀️ Modelo de Iluminação Fisicamente Preciso
+
 - Irradiância realista com base na constante solar.
 - Materiais PBR com albedo físico.
 - Representação em condição AM0.
 
 ### 🛰️ Navegação e Interatividade
+
 - Câmera com foco suave em objetos selecionados.
 - Alternância entre câmera guiada e câmera livre.
 - Labels dinâmicos com oclusão por raycasting.
 - Exploração de diferentes regiões e objetos da cena.
 
 ### 🌌 Conteúdo Astronômico
+
 - Planetas, luas, TNOs, cometas e buracos negros.
 - Overlays informativos com dados astronômicos.
 - Transição entre escala do Sistema Solar e escala interestelar.
@@ -111,14 +114,14 @@ Releases
 
 ## 📁 Estrutura do Código
 
-| Arquivo | Função principal |
-| :--- | :--- |
-| `main.js` | Inicializa o Electron, abre o launcher e carrega a experiência principal. |
-| `public/launcher.html` | Estrutura do launcher nativo do aplicativo. |
-| `public/index.html` | Estrutura principal da experiência 3D. |
-| `public/style.css` | Estilos da interface sobreposta à cena 3D. |
-| `public/scripts/app.js` | Núcleo da cena, câmera, seleção e overlays. |
-| `src/data/*.js` | Catálogo astronômico utilizado pelos objetos da cena. |
+| Arquivo                 | Função principal                                                          |
+| :---------------------- | :------------------------------------------------------------------------ |
+| `main.js`               | Inicializa o Electron, abre o launcher e carrega a experiência principal. |
+| `public/launcher.html`  | Estrutura do launcher nativo do aplicativo.                               |
+| `public/index.html`     | Estrutura principal da experiência 3D.                                    |
+| `public/style.css`      | Estilos da interface sobreposta à cena 3D.                                |
+| `public/scripts/app.js` | Núcleo da cena, câmera, seleção e overlays.                               |
+| `src/data/*.js`         | Catálogo astronômico utilizado pelos objetos da cena.                     |
 
 ---
 
@@ -172,6 +175,6 @@ GitHub: https://github.com/uelison-dev
 
 ---
 
-**Versão atual:** 6.36.0
+**Versão atual:** 6.39.0 — consulte o [histórico de alterações](CHANGELOG.md) e a [política de versionamento](VERSIONING.md).
 
 © 2026 Uelison Ferreira. Todos os direitos reservados.

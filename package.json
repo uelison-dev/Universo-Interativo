@@ -1,6 +1,6 @@
 {
   "name": "sistema-solar-interativo",
-  "version": "6.36.1",
+  "version": "6.39.0",
   "description": "<p align=\"center\">\r   <img src=\"https://img.shields.io/badge/Tecnologia-Three.js-blue?style=for-the-badge&logo=threedots&logoColor=white\" />\r   <img src=\"https://img.shields.io/badge/Linguagem-JavaScript%20(ES6)-yellow?style=for-the-badge&logo=javascript\" />\r   <img src=\"https://img.shields.io/badge/Modelo%20de%20Luz-Físico%20(AM0)-brightgreen?style=for-the-badge\" />\r </p>",
   "main": "main.js",
   "scripts": {

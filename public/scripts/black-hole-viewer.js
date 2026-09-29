@@ -1,6 +1,8 @@
 import * as THREE from '../../node_modules/three/build/three.module.js';
 import { OrbitControls } from '../libs/three/controls/OrbitControls.js';
 import { createBlackHole, animateBlackHole } from '../../utils/black_hole.js';
+import { createSunSurfaceMaterial, createSunGlow } from '../../utils/sun_visual.js';
+import { createCometNucleusGeometry, addCometEffects } from '../../utils/comet_visual.js';
 
 const { ipcRenderer } = window.require('electron');
 const stage = document.querySelector('.viewer-stage');
@@ -22,6 +24,9 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.12;
 stage.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -33,7 +38,7 @@ controls.maxDistance = 36;
 controls.target.set(0, 0, 0);
 
 const starGeometry = new THREE.BufferGeometry();
-const starPositions = new Float32Array(900 * 3);
+const starPositions = new Float32Array(1500 * 3);
 for (let index = 0; index < starPositions.length; index += 3) {
   const radius = 45 + Math.random() * 35;
   const theta = Math.random() * Math.PI * 2;
@@ -46,7 +51,7 @@ starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3
 scene.add(
   new THREE.Points(
     starGeometry,
-    new THREE.PointsMaterial({ color: 0xa9c8cf, size: 0.08, transparent: true, opacity: 0.72 })
+    new THREE.PointsMaterial({ color: 0xd9d3c8, size: 0.055, transparent: true, opacity: 0.64 })
   )
 );
 
@@ -54,10 +59,12 @@ const textureLoader = new THREE.TextureLoader();
 let blackHole = null;
 let inspectedBody = null;
 let inspectedOrbit = null;
+let inspectedSunMaterial = null;
+let inspectedCometUpdater = null;
 let previousTime = performance.now();
 
-scene.add(new THREE.AmbientLight(0x778899, 0.55));
-const keyLight = new THREE.DirectionalLight(0xffe1bd, 2.6);
+scene.add(new THREE.AmbientLight(0x5f6d82, 0.12));
+const keyLight = new THREE.DirectionalLight(0xffe5c8, 1.35);
 keyLight.position.set(-7, 5, 10);
 scene.add(keyLight);
 
@@ -71,6 +78,8 @@ function resize() {
 
 function renderDetails(data) {
   document.body.classList.toggle('compact-object-view', data.mode !== 'black-hole');
+  document.body.classList.toggle('black-hole-view', data.mode === 'black-hole');
+  visibilityButton.hidden = data.mode === 'black-hole';
   nameElement.textContent = data.name || 'Buraco negro';
   typeElement.textContent = data.type || data.info?.Tipo || 'Corpo celeste';
   detailsElement.innerHTML = '';
@@ -114,28 +123,37 @@ function createCelestialBody(data) {
   const radius = 4;
   const group = new THREE.Group();
   const texture = data.texturePath ? textureLoader.load(data.texturePath) : null;
+  if (texture) texture.encoding = THREE.sRGBEncoding;
   const body = new THREE.Mesh(
-    new THREE.SphereGeometry(radius, 64, 64),
-    new THREE.MeshStandardMaterial({
-      map: texture,
-      color: data.isComet ? 0x6d5542 : 0xffffff,
-      roughness: 0.92,
-      metalness: 0.02
-    })
+    data.isComet
+      ? createCometNucleusGeometry(radius, 64)
+      : new THREE.SphereGeometry(radius, 64, 64),
+    data.isSun
+      ? createSunSurfaceMaterial(texture)
+      : new THREE.MeshStandardMaterial({
+          map: texture,
+          color: data.isComet ? 0xa59a88 : 0xffffff,
+          roughness: data.isComet ? 0.98 : 0.88,
+          metalness: 0.0
+        })
   );
   group.add(body);
+  if (data.isSun) group.add(createSunGlow(radius));
 
   if (data.ring) {
     const ringTexture = textureLoader.load(data.ring.texturePath);
+    ringTexture.encoding = THREE.sRGBEncoding;
     const sourceSize = Math.max(Number(data.size) || 1, 1);
     const innerRadius = radius * (data.ring.innerRadius / sourceSize);
     const outerRadius = radius * (data.ring.outerRadius / sourceSize);
     const ring = new THREE.Mesh(
       new THREE.RingGeometry(innerRadius, outerRadius, 128),
-      new THREE.MeshBasicMaterial({
+      new THREE.MeshStandardMaterial({
         map: ringTexture,
         side: THREE.DoubleSide,
         transparent: true,
+        roughness: 0.95,
+        metalness: 0,
         depthWrite: false
       })
     );
@@ -144,19 +162,11 @@ function createCelestialBody(data) {
   }
 
   if (data.isComet) {
-    const tail = new THREE.Mesh(
-      new THREE.ConeGeometry(1.1, 6, 24, 1, true),
-      new THREE.MeshBasicMaterial({
-        color: 0xd7c4a2,
-        transparent: true,
-        opacity: 0.22,
-        side: THREE.DoubleSide,
-        depthWrite: false
-      })
-    );
-    tail.rotation.z = -Math.PI / 2;
-    tail.position.x = -3.4;
-    group.add(tail);
+    inspectedCometUpdater = addCometEffects(body, {
+      radius,
+      tailLength: 13,
+      colors: data.cometVisual
+    });
   }
 
   return group;
@@ -192,16 +202,19 @@ function showObject(data) {
   blackHole = null;
   inspectedBody = null;
   inspectedOrbit = null;
+  inspectedSunMaterial = null;
+  inspectedCometUpdater = null;
 
   if (data.mode === 'black-hole') {
     blackHole = createBlackHole({ ...data, sceneSize: 4 }, textureLoader);
     scene.add(blackHole);
   } else {
     inspectedBody = createCelestialBody(data);
+    if (data.isSun) inspectedSunMaterial = inspectedBody.children[0].material;
     scene.add(inspectedBody);
     inspectedOrbit = createOrbit(data);
   }
-  camera.position.set(0, 0.65, 13.5);
+  camera.position.set(0, data.isComet ? 0 : 1.35, data.isComet ? 25 : 13.5);
   controls.target.set(0, 0, 0);
   controls.update();
 }
@@ -224,6 +237,17 @@ function animate(now) {
   previousTime = now;
   if (blackHole) animateBlackHole(blackHole, camera, delta);
   if (inspectedBody) inspectedBody.rotation.y += delta * 0.18;
+  if (inspectedSunMaterial?.uniforms?.time) inspectedSunMaterial.uniforms.time.value += delta;
+  if (inspectedCometUpdater && inspectedBody) {
+    const inverseRotation = inspectedBody.quaternion.clone().invert();
+    const antiSolarDirection = keyLight.position
+      .clone()
+      .negate()
+      .normalize()
+      .applyQuaternion(inverseRotation);
+    const orbitalVelocity = new THREE.Vector3(0, 1, 0).applyQuaternion(inverseRotation);
+    inspectedCometUpdater(antiSolarDirection, orbitalVelocity, now / 1000, 1);
+  }
   controls.update();
   renderer.render(scene, camera);
 }

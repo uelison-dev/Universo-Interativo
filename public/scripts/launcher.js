@@ -16,6 +16,39 @@ const projectHighlights = [
 
 const patchNotes = [
   {
+    version: '6.39.0',
+    category: 'Visual e desempenho',
+    title: 'Caudas dos cometas refeitas com brilho procedural',
+    changes: [
+      'As caudas contínuas usam gradientes de shader no lugar das nuvens de pontos animadas.',
+      'Poeira e íons têm formatos, brilho e cores próprios, alinhados com registros das aparições de cada cometa.',
+      'O mesmo efeito leve é usado na cena principal e na inspeção dedicada.'
+    ]
+  },
+  {
+    version: '6.38.0',
+    category: 'Cometas e inspeção',
+    title: 'Cometas com coma e caudas de poeira e íons',
+    changes: [
+      'Núcleo irregular e coma luminosa criam uma silhueta mais próxima de um cometa ativo.',
+      'Cauda ampla de poeira curva e cauda estreita de íons azulados acompanham a direção oposta ao Sol.',
+      'A mesma representação de cometa aparece na cena principal e na inspeção dedicada.',
+      'A logo do launcher agora cabe por inteiro no espaço reservado.'
+    ]
+  },
+  {
+    version: '6.37.0',
+    category: 'Visual e experiência',
+    title: 'Identidade visual renovada e inspeção celeste aprimorada',
+    changes: [
+      'A logo atual do Universo Interativo passou a ser usada no launcher, nos favicons e nas janelas do aplicativo.',
+      'A interface adotou o tema grafite e âmbar da tela dedicada, com controles de zoom completos e player de áudio centralizado.',
+      'Os controles temporais mantêm avanço ano a ano e comparação animada, agora com apresentação atualizada.',
+      'A tela dedicada e a cena principal compartilham a iluminação do Sol; os rastros orbitais mostram o percurso já realizado.',
+      'A iluminação dos cinturões de asteroides e de Kuiper foi reforçada sem remover as texturas.'
+    ]
+  },
+  {
     version: '6.36.1',
     category: 'Arquivo de distruibuição',
     title: 'Alterações dos imports e modules',

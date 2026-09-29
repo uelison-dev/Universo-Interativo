@@ -1,14 +1,4 @@
-export function initializeControlPanels({
-  planets,
-  moons,
-  moonTrails,
-  tnoMoonTrails,
-  majorTNOs,
-  tnos,
-  comets,
-  unifiedOrbits,
-  kuiperGroup
-}) {
+export function initializeControlPanels({ planets, moons, majorTNOs, tnos, comets, kuiperGroup }) {
   const visibilityBtn = document.getElementById('visibility-btn');
   const visibilityMenu = document.getElementById('visibility-menu');
   const reopenAudioBtn = document.getElementById('reopen-audio-btn');
@@ -16,6 +6,7 @@ export function initializeControlPanels({
   const infoBtn = document.getElementById('info-btn');
   const navigationLegend = document.getElementById('navigation-legend');
   const togglePlanetsOrbits = document.getElementById('toggle-planets-orbits');
+  const toggleSatellitesOrbits = document.getElementById('toggle-satellites-orbits');
   const toggleTnosOrbits = document.getElementById('toggle-tnos-orbits');
   const toggleCometsOrbits = document.getElementById('toggle-comets-orbits');
   const toggleMajorTnosOrbits = document.getElementById('toggle-major-tnos-orbits');
@@ -25,19 +16,14 @@ export function initializeControlPanels({
     infoBtn.classList.toggle('active', !navigationLegend.classList.contains('minimized'));
   };
 
-  unifiedOrbits.planets.visible = false;
-  unifiedOrbits.majorTnos.visible = false;
   kuiperGroup.visible = false;
   planets.forEach((planet) => planet.trail && (planet.trail.line.visible = false));
   majorTNOs.forEach((tno) => tno.trail && (tno.trail.line.visible = false));
-  tnos.forEach((tno) => (tno.orbitLine.visible = false));
   tnos.forEach((tno) => tno.trail && (tno.trail.line.visible = false));
   comets.forEach((comet) => {
-    comet.orbitLine.visible = false;
     if (comet.trail) comet.trail.line.visible = false;
   });
-  moonTrails.forEach(({ trail }) => (trail.line.visible = false));
-  tnoMoonTrails.forEach(({ trail }) => (trail.line.visible = false));
+  moons.forEach(({ trail }) => trail && (trail.line.visible = false));
 
   visibilityBtn.addEventListener('click', () => {
     visibilityMenu.classList.toggle('visible');
@@ -83,42 +69,23 @@ export function initializeControlPanels({
   syncButtonStates();
 
   togglePlanetsOrbits.addEventListener('change', (event) => {
-    unifiedOrbits.planets.visible = event.target.checked;
-
     planets.forEach((planet) => {
       if (planet.trail) {
         planet.trail.line.visible = event.target.checked;
       }
     });
+  });
 
-    moons.forEach((moonData) => {
-      const trailObject = moonTrails.find(
-        (trailEntry) => trailEntry.moon.uuid === moonData.moon.uuid
-      );
-      if (trailObject) {
-        trailObject.trail.line.visible = event.target.checked;
-      }
-    });
-
-    tnoMoonTrails.forEach((trailEntry) => {
-      if (trailEntry.trail) {
-        trailEntry.trail.line.visible = event.target.checked;
-      }
+  toggleSatellitesOrbits.addEventListener('change', (event) => {
+    moons.forEach(({ trail }) => {
+      if (trail) trail.line.visible = event.target.checked;
     });
   });
 
   toggleMajorTnosOrbits.addEventListener('change', (event) => {
-    unifiedOrbits.majorTnos.visible = event.target.checked;
-
     majorTNOs.forEach((tno) => {
       if (tno.trail) {
         tno.trail.line.visible = event.target.checked;
-      }
-    });
-
-    tnoMoonTrails.forEach((trailEntry) => {
-      if (trailEntry.trail) {
-        trailEntry.trail.line.visible = event.target.checked;
       }
     });
   });
@@ -129,12 +96,10 @@ export function initializeControlPanels({
     });
 
     kuiperGroup.visible = event.target.checked;
-    unifiedOrbits.majorTnos.visible = event.target.checked;
   });
 
   toggleCometsOrbits.addEventListener('change', (event) => {
     comets.forEach((comet) => {
-      comet.orbitLine.visible = false;
       if (comet.trail) {
         comet.trail.line.visible = event.target.checked;
       }

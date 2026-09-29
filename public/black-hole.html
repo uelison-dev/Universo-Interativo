@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Inspecao de objeto celeste</title>
     <link rel="stylesheet" href="./black-hole.css" />
+    <link rel="icon" type="image/png" href="../logo_atom.png" />
   </head>
   <body>
     <main class="viewer-shell">
@@ -16,11 +17,53 @@
         </div>
         <div class="stage-hint">Arraste para orbitar · roda do mouse para aproximar</div>
         <div class="viewer-controls" aria-label="Controles da visualizacao">
-          <button id="viewer-visibility" type="button" aria-label="Mostrar ou ocultar orbita" title="Visibilidade">O</button>
-          <button id="viewer-info" type="button" aria-label="Mostrar ou ocultar informacoes" title="Informacoes">i</button>
-          <button id="viewer-zoom-in" type="button" aria-label="Aproximar" title="Aproximar">+</button>
-          <button id="viewer-zoom-out" type="button" aria-label="Afastar" title="Afastar">-</button>
-          <button id="viewer-camera" type="button" aria-label="Alternar camera automatica" title="Camera">C</button>
+          <button
+            id="viewer-visibility"
+            type="button"
+            aria-label="Mostrar ou ocultar orbita"
+            title="Visibilidade"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </button>
+          <button
+            id="viewer-info"
+            type="button"
+            aria-label="Mostrar ou ocultar informacoes"
+            title="Informacoes"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 11v5m0-8h.01" />
+            </svg>
+          </button>
+          <button id="viewer-zoom-in" type="button" aria-label="Aproximar" title="Aproximar">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10.8" cy="10.8" r="6.8" />
+              <path d="m16 16 5 5M10.8 7.5v6.6m-3.3-3.3h6.6" />
+            </svg>
+          </button>
+          <button id="viewer-zoom-out" type="button" aria-label="Afastar" title="Afastar">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10.8" cy="10.8" r="6.8" />
+              <path d="m16 16 5 5m-13.5-10h6.6" />
+            </svg>
+          </button>
+          <button
+            id="viewer-camera"
+            type="button"
+            aria-label="Alternar camera automatica"
+            title="Camera"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1"
+              />
+              <circle cx="12" cy="12" r="4" />
+            </svg>
+          </button>
         </div>
         <div id="satellite-switcher" class="satellite-switcher" hidden>
           <div class="satellite-heading">

@@ -11,6 +11,8 @@ import { initSearch } from '../../ui/search.js';
 import { Trail } from '../../utils/trail.js';
 // NOVO IMPORT: LÃ³gica de criaÃ§Ã£o do Buraco Negro
 import { createBlackHole, animateBlackHole } from '../../utils/black_hole.js';
+import { createSunSurfaceMaterial, createSunGlow } from '../../utils/sun_visual.js';
+import { createCometNucleusGeometry, addCometEffects } from '../../utils/comet_visual.js';
 import { APP_VERSION } from './config.js';
 import { initializeAudioPlayer } from './modules/audio-player.js';
 import { initializeControlPanels } from './modules/control-panels.js';
@@ -73,6 +75,7 @@ const zoomControlsContainer = document.getElementById('zoom-controls-container')
 const zoomInBtn = document.getElementById('zoom-in-btn');
 const zoomOutBtn = document.getElementById('zoom-out-btn');
 const toggleCameraBtn = document.getElementById('toggle-camera-btn');
+const dedicatedViewerBtn = document.getElementById('dedicated-viewer-btn');
 const electronIpc =
   typeof window.require === 'function' ? window.require('electron').ipcRenderer : null;
 
@@ -82,17 +85,26 @@ function restoreMainNavigation() {
   isCameraFree = true;
   isDragging = false;
   controls.enabled = true;
+  controls.minDistance = 20;
+  controls.maxDistance = 20000000;
+  camera.near = 0.1;
+  camera.updateProjectionMatrix();
   controls.target.set(0, 0, 0);
   camera.position.set(0, 0, 2500);
   controls.update();
   hideInfoOverlay();
   zoomControlsContainer.style.display = 'none';
+  dedicatedViewerBtn.disabled = true;
   renderer.domElement.style.cursor = 'default';
 }
 
 if (electronIpc) {
   electronIpc.on('dedicated-viewer:closed', restoreMainNavigation);
 }
+
+dedicatedViewerBtn.addEventListener('click', () => {
+  if (selectedObject) openObjectViewer(selectedObject.userData);
+});
 
 // Arrays de objetos
 export const clickableObjects = [];
@@ -102,6 +114,8 @@ const majorTNOs = [];
 const tnos = [];
 const moons = [];
 const comets = [];
+let timelinePhaseAnchor = null;
+let timelineAnimation = null;
 // NOVO ARRAY: Buracos Negros
 const blackHoles = [];
 let sunObject = null; // Para armazenar o objeto do Sol
@@ -131,10 +145,6 @@ const GALACTIC_CENTER_POS = {
   z: -DISTANCE_TO_GALACTIC_CENTER
 };
 
-// Arrays para as novas trilhas (trails)
-const moonTrails = [];
-const tnoMoonTrails = []; // Novo array para os trails das luas dos TNOs
-
 // VariÃ¡vel para controle de zoom manual
 let currentZoomDistance = 0;
 // VariÃ¡vel para a posiÃ§Ã£o vertical do marcador
@@ -144,6 +154,112 @@ let isCameraFree = false;
 // Fator de escala para objetos celestes (ajustado para melhor visualizaÃ§Ã£o)
 const CELESTIAL_SCALE_FACTOR = 0.00005;
 const ORBIT_SCALE_UNITS_PER_AU = 100;
+const ORBIT_TRAIL_SPAN = 0.42;
+const ORBIT_TRAIL_SEGMENTS = 48;
+
+function updateOrbitTrail(trail, angle, pointAtAngle, angularVelocity = 1) {
+  if (!trail?.line.visible) return;
+  const direction = angularVelocity < 0 ? -1 : 1;
+  const points = [];
+  for (let index = 0; index <= ORBIT_TRAIL_SEGMENTS; index += 1) {
+    const progress = index / ORBIT_TRAIL_SEGMENTS;
+    const trailAngle =
+      angle - direction * ORBIT_TRAIL_SPAN + direction * ORBIT_TRAIL_SPAN * progress;
+    points.push(pointAtAngle(trailAngle));
+  }
+  trail.setPath(points);
+}
+
+function pointOnEllipticalOrbit(semiMajorAxis, eccentricity, angle) {
+  const radius =
+    (semiMajorAxis * (1 - eccentricity * eccentricity)) / (1 + eccentricity * Math.cos(angle));
+  return new THREE.Vector3(radius * Math.cos(angle), 0, radius * Math.sin(angle));
+}
+
+function pointOnCurveOrbit(curve, angle) {
+  const normalized = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+  const point = curve.getPoint(normalized / (Math.PI * 2));
+  return new THREE.Vector3(point.x, 0, point.y);
+}
+
+function orbitalPeriodYears(object, category) {
+  if (category === 'moon') {
+    const info = object.moon.userData.info || {};
+    const periodEntry = Object.entries(info).find(([key]) => key.toLowerCase().includes('orbital'));
+    const orbitalPeriod = String(periodEntry?.[1] || '');
+    const number = Number(orbitalPeriod.replace(',', '.').match(/[\d.]+/)?.[0]);
+    if (Number.isFinite(number) && number > 0) {
+      return /dia/i.test(orbitalPeriod) ? number / 365.25 : number;
+    }
+    return 0.1;
+  }
+  if (category === 'comet' && Number(object.comet.userData.period) > 0) {
+    return Number(object.comet.userData.period);
+  }
+  const axis = category === 'planet' ? object.semiMajorAxis : (object.a ?? object.semiMajorAxis);
+  if (!Number.isFinite(axis) || axis <= 0) return 1;
+  return Math.max(0.01, axis / ORBIT_SCALE_UNITS_PER_AU) ** 1.5;
+}
+
+function setTimelinePhase(category, objects, years) {
+  objects.forEach((object, index) => {
+    const field = category === 'tno' || category === 'comet' ? 'currentAngle' : 'orbitAngle';
+    const anchored = timelinePhaseAnchor[category][index];
+    object[field] = anchored + (years * Math.PI * 2) / orbitalPeriodYears(object, category);
+  });
+}
+
+function captureTimelinePhases() {
+  return {
+    planet: planets.map((item) => item.orbitAngle),
+    moon: moons.map((item) => item.orbitAngle),
+    major: majorTNOs.map((item) => item.orbitAngle),
+    tno: tnos.map((item) => item.currentAngle),
+    comet: comets.map((item) => item.currentAngle)
+  };
+}
+
+function applyTimelineYears(years, preserveAnchor = false) {
+  if (years > 0 && !timelinePhaseAnchor) timelinePhaseAnchor = captureTimelinePhases();
+  if (!timelinePhaseAnchor) return;
+  if (years === 0) {
+    planets.forEach((item, index) => (item.orbitAngle = timelinePhaseAnchor.planet[index]));
+    moons.forEach((item, index) => (item.orbitAngle = timelinePhaseAnchor.moon[index]));
+    majorTNOs.forEach((item, index) => (item.orbitAngle = timelinePhaseAnchor.major[index]));
+    tnos.forEach((item, index) => (item.currentAngle = timelinePhaseAnchor.tno[index]));
+    comets.forEach((item, index) => (item.currentAngle = timelinePhaseAnchor.comet[index]));
+    if (!preserveAnchor) timelinePhaseAnchor = null;
+  } else {
+    setTimelinePhase('planet', planets, years);
+    setTimelinePhase('moon', moons, years);
+    setTimelinePhase('major', majorTNOs, years);
+    setTimelinePhase('tno', tnos, years);
+    setTimelinePhase('comet', comets, years);
+  }
+}
+
+function beginTimelineComparison(targetYear) {
+  const target = Math.max(1, Math.min(250, targetYear));
+  yearSlider.value = String(target);
+  if (!timelinePhaseAnchor) timelinePhaseAnchor = captureTimelinePhases();
+  timelineAnimation = { year: 0, target, lastTime: performance.now() };
+  applyTimelineYears(0, true);
+  timeYearDisplay.textContent = `Agora → +0 / +${target} anos`;
+}
+
+function advanceTimelineComparison() {
+  if (!timelineAnimation) return;
+  const now = performance.now();
+  const delta = Math.min((now - timelineAnimation.lastTime) / 1000, 0.05);
+  timelineAnimation.lastTime = now;
+  timelineAnimation.year = Math.min(timelineAnimation.target, timelineAnimation.year + delta * 0.4);
+  applyTimelineYears(timelineAnimation.year, true);
+  timeYearDisplay.textContent = `Agora → +${timelineAnimation.year.toFixed(1)} / +${timelineAnimation.target} anos`;
+  if (timelineAnimation.year >= timelineAnimation.target) {
+    timeYearDisplay.textContent = `+${timelineAnimation.target} anos · concluído`;
+    timelineAnimation = null;
+  }
+}
 
 // Loading manager (AGORA UNIFICADO)
 // CORRIGIDO: Usando THREE.LoadingManager do namespace importado.
@@ -183,12 +299,14 @@ function openObjectViewer(data) {
 
   electronIpc.invoke('black-hole:open', {
     mode: data.isBlackHole ? 'black-hole' : 'celestial-body',
+    isSun: data.isSun,
     name: data.name || data.Nome || data['Designação provisória'],
     type: data.type || (data.isMajorTNO ? 'Planeta-anão' : data.isTNO ? 'TNO' : undefined),
     size: data.size,
-    texturePath: data.texturePath,
+    texturePath: data.isComet ? 'assets/textures/comet_head_mesh.jpg' : data.texturePath,
     ring: data.ring,
     isComet: data.isComet,
+    cometVisual: data.visual,
     isTNO: data.isTNO,
     isMajorTNO: data.isMajorTNO,
     isMoon: data.isMoon,
@@ -249,9 +367,7 @@ function createDistantSun() {
   const sunGeometry = new THREE.SphereGeometry(sunData.size, 64, 64);
 
   // Usamos MeshBasicMaterial com emissive para que ele brilhe e nÃ£o dependa de outras luzes
-  const sunMaterial = new THREE.MeshBasicMaterial({
-    map: sunTexture
-  });
+  const sunMaterial = createSunSurfaceMaterial(sunTexture);
 
   const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
   sunMesh.userData = { ...sunData, isSun: true };
@@ -269,41 +385,12 @@ function createDistantSun() {
   occluders.push(sunMesh);
 
   // --- 2. LÃ³gica de iluminaÃ§Ã£o (PointLight) ---
+  // Intensidade calibrada às distâncias em unidades de cena (1 UA = 100 unidades).
   const pointLight = new THREE.PointLight(0xffffff, 1.5, 0, 1.5);
   sun.add(pointLight);
 
   // --- 3. Brilho do Sol (visÃ­vel de perto) ---
-  const glowCanvas = document.createElement('canvas');
-  glowCanvas.width = 128;
-  glowCanvas.height = 128;
-  const ctx = glowCanvas.getContext('2d');
-
-  const gradient = ctx.createRadialGradient(
-    glowCanvas.width / 2,
-    glowCanvas.height / 2,
-    0,
-    glowCanvas.width / 2,
-    glowCanvas.height / 2,
-    glowCanvas.width / 2
-  );
-  gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-  gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
-  gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, glowCanvas.width, glowCanvas.height);
-
-  const glowTexture = new THREE.CanvasTexture(glowCanvas);
-  const glowMaterial = new THREE.SpriteMaterial({
-    map: glowTexture,
-    color: 0xffa500,
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
-
-  const sunGlow = new THREE.Sprite(glowMaterial);
-  // A escala deve ser maior que o mesh do sol
-  sunGlow.scale.set(sunData.size * 10, sunData.size * 10, 1);
+  const sunGlow = createSunGlow(sunData.size);
   sun.add(sunGlow);
 
   // --- 4. Ponto de Luz Distante (Sprite) - SEMPRE visÃ­vel de LONGE ---
@@ -321,9 +408,9 @@ function createDistantSun() {
     starGlowCanvas.height / 2,
     starGlowCanvas.width / 2
   );
-  starGradient.addColorStop(0, 'rgba(255, 255, 0, 1)');
-  starGradient.addColorStop(0.2, 'rgba(255, 200, 0, 0.9)');
-  starGradient.addColorStop(0.5, 'rgba(255, 160, 0, 0.5)');
+  starGradient.addColorStop(0, 'rgba(255, 250, 224, 1)');
+  starGradient.addColorStop(0.12, 'rgba(255, 226, 164, 0.84)');
+  starGradient.addColorStop(0.38, 'rgba(255, 174, 74, 0.40)');
   starGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
   starCtx.fillStyle = starGradient;
@@ -332,7 +419,7 @@ function createDistantSun() {
   const starTexture = new THREE.CanvasTexture(starGlowCanvas);
   const starMaterial = new THREE.SpriteMaterial({
     map: starTexture,
-    color: 0xffff00,
+    color: 0xffe2a3,
     transparent: true,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
@@ -444,8 +531,8 @@ function createPlanets() {
       const orbitSpeed = orbitalSpeedFactor / Math.pow(semiMajorAxis, 1.5);
 
       // Aplica a lÃ³gica de trail fade nos planetas, similar Ã  das luas.
-      const trail = new Trail(0x38bdf8, 900);
-      scene.add(trail.line);
+      const trail = new Trail(0x38bdf8, 64);
+      orbitGroup.add(trail.line);
 
       const labelDiv = document.createElement('div');
       labelDiv.className = 'planet-label category-planet';
@@ -554,8 +641,8 @@ function createMajorTNOs() {
     orbitGroup.rotation.x = inclinationRad;
 
     // --- CRIAÃ‡ÃƒO DO TRAIL (Rastro) ---
-    const trail = new Trail(0xd6b77c, 900);
-    scene.add(trail.line);
+    const trail = new Trail(0xd6b77c, 64);
+    orbitGroup.add(trail.line);
 
     const labelDiv = document.createElement('div');
     labelDiv.className = 'planet-label category-dwarf';
@@ -594,15 +681,15 @@ function createMajorTNOs() {
         satellite.userData = { ...satelliteData, isMoonOfTNO: true, parent: tno };
 
         const satelliteOrbitGroup = new THREE.Group();
-        tno.add(satelliteOrbitGroup);
+        orbitGroup.add(satelliteOrbitGroup);
+        satelliteOrbitGroup.position.copy(tno.position);
 
         const satelliteOrbitRadius = satelliteData.position * CELESTIAL_SCALE_FACTOR;
         const startAngle = Math.random() * Math.PI * 2;
 
         // Ajuste do nÃºmero de pontos do trail para os satÃ©lites de TNOs
-        const trail = new Trail(0xc6cbd0, 420);
-        scene.add(trail.line);
-        tnoMoonTrails.push({ moon: satellite, trail });
+        const trail = new Trail(0xc6cbd0, 48);
+        satelliteOrbitGroup.add(trail.line);
 
         // --- NOVO: LÃ“GICA DA ATMOSFERA (se houver) ---
         // --- FIM LÃ“GICA DA ATMOSFERA ---
@@ -624,6 +711,8 @@ function createMajorTNOs() {
           rotationSpeed: satelliteData.rotationSpeed,
           orbitSpeed: satelliteOrbitSpeed,
           orbitAngle: startAngle,
+          centerObject: tno,
+          trail,
           labelDiv: satelliteLabelDiv
         });
 
@@ -636,123 +725,6 @@ function createMajorTNOs() {
       });
     }
   });
-}
-
-const unifiedOrbits = {
-  planets: null,
-  majorTnos: null,
-  tnos: null,
-  comets: null
-};
-
-// ATUALIZADA: FunÃ§Ã£o para criar o caminho da Ã³rbita estÃ¡tica (elipse) para Planetas-AnÃµes
-function createUnifiedOrbits() {
-  // Órbitas dos planetas
-  unifiedOrbits.planets = new THREE.Object3D();
-  scene.add(unifiedOrbits.planets);
-
-  celestialData
-    .filter((d) => d.name !== 'Sol')
-    .forEach((data) => {
-      const semiMajorAxis = data.positionX;
-      const eccentricity = data.info['Excentricidade orbital'];
-      const inclinationDeg = data.info['Inclinação orbital em graus'];
-      const semiMinorAxis = semiMajorAxis * Math.sqrt(1 - eccentricity * eccentricity);
-      const focusDistance = semiMajorAxis * eccentricity; // DistÃ¢ncia do foco (Sol)
-
-      // Grupo para a inclinaÃ§Ã£o orbital
-      const orbitGroupInclination = new THREE.Object3D();
-      orbitGroupInclination.rotation.x = inclinationDeg * (Math.PI / 180);
-      unifiedOrbits.planets.add(orbitGroupInclination);
-
-      // Grupo para o offset do Sol (o Sol estÃ¡ no foco, nÃ£o no centro da elipse)
-      const orbitGroupOffset = new THREE.Object3D();
-      orbitGroupOffset.position.x = -focusDistance; // O centro da elipse Ã© deslocado
-      orbitGroupInclination.add(orbitGroupOffset);
-
-      const segments = 1000;
-
-      // Criamos os pontos para a ELIPSE
-      const points = [];
-      for (let i = 0; i <= segments; i++) {
-        const angle = (i / segments) * Math.PI * 2;
-
-        // FÃ³rmula da elipse com centro em (0, 0)
-        const x = semiMajorAxis * Math.cos(angle);
-        const z = semiMinorAxis * Math.sin(angle);
-        points.push(new THREE.Vector3(x, 0, z));
-      }
-
-      const orbitGeometry = new THREE.BufferGeometry().setFromPoints(points);
-      const orbitMaterial = new THREE.LineBasicMaterial({
-        color: 0x81909a,
-        transparent: true,
-        opacity: 0.28
-      });
-
-      // Usamos THREE.LineLoop para fechar a Ã³rbita sem criar o segmento indesejado (o "bug")
-      const orbitLine = new THREE.LineLoop(orbitGeometry, orbitMaterial);
-
-      // Adicionamos a linha de Ã³rbita (elipse) ao grupo de offset, centralizando o Sol no foco.
-      orbitLine.visible = false;
-      orbitGroupOffset.add(orbitLine);
-    });
-
-  // Órbitas dos TNOs principais
-  unifiedOrbits.majorTnos = new THREE.Object3D();
-  scene.add(unifiedOrbits.majorTnos);
-
-  const scaleFactor = ORBIT_SCALE_UNITS_PER_AU;
-
-  majorTNOData.forEach((data) => {
-    // --- CÃLCULO DE DADOS ELÃPTICOS PARA LINHA DE Ã“RBITA ---
-    const semiMajorAxisAU = data.info['Distância orbital média (UA)'];
-    const eccentricity = data.info['Excentricidade orbital'];
-    const inclinationDeg = data.info['Inclinação orbital em graus'];
-
-    const a_scaled = semiMajorAxisAU * scaleFactor;
-    const semiMinorAxis = a_scaled * Math.sqrt(1 - eccentricity * eccentricity);
-    const focusDistance = a_scaled * eccentricity; // DistÃ¢ncia do foco (Sol)
-
-    const segments = 1000;
-
-    // Grupo para a inclinaÃ§Ã£o orbital
-    const orbitGroupInclination = new THREE.Object3D();
-    orbitGroupInclination.rotation.x = inclinationDeg * (Math.PI / 180);
-    unifiedOrbits.majorTnos.add(orbitGroupInclination);
-
-    // Grupo para o offset do Sol (o Sol estÃ¡ no foco, nÃ£o no centro da elipse)
-    const orbitGroupOffset = new THREE.Object3D();
-    orbitGroupInclination.add(orbitGroupOffset);
-
-    const points = [];
-    for (let i = 0; i <= segments; i++) {
-      const angle = (i / segments) * Math.PI * 2;
-
-      // FÃ³rmula da elipse com centro em (0, 0)
-      const x = a_scaled * Math.cos(angle) - focusDistance; // Aplica o offset aqui
-      const z = semiMinorAxis * Math.sin(angle);
-      points.push(new THREE.Vector3(x, 0, z));
-    }
-
-    const orbitGeometry = new THREE.BufferGeometry().setFromPoints(points);
-    const orbitMaterial = new THREE.LineBasicMaterial({
-      color: 0x8d9aa3,
-      transparent: true,
-      opacity: 0.24
-    });
-
-    const orbitLine = new THREE.LineLoop(orbitGeometry, orbitMaterial);
-
-    orbitLine.visible = false;
-    orbitGroupOffset.add(orbitLine);
-  });
-
-  // Órbitas dos TNOs e Cometas sÃ£o criadas separadamente agora
-  unifiedOrbits.tnos = new THREE.Object3D();
-  unifiedOrbits.comets = new THREE.Object3D();
-  scene.add(unifiedOrbits.tnos);
-  scene.add(unifiedOrbits.comets);
 }
 
 const tnoTexture = textureLoader.load('assets/textures/kuiper_texture.png');
@@ -797,26 +769,6 @@ function createTNOs() {
     const orbitCurve = new THREE.EllipseCurve(-c, 0, a, b, 0, 2 * Math.PI, false, 0);
 
     // --- INÃCIO DA MUDANÃ‡A: Estilo da Ã³rbita dos TNOs ---
-    const segments = 1000;
-    const curvePoints = orbitCurve.getPoints(segments);
-    const points = [];
-    // Mapeia os pontos da curva do plano XY (retornado pela EllipseCurve) para o plano XZ,
-    // onde X e Z sÃ£o as coordenadas orbitais e Y Ã© 0 no espaÃ§o local do tnoOrbit.
-    curvePoints.forEach((point) => {
-      points.push(new THREE.Vector3(point.x, 0, point.y));
-    });
-
-    const orbitGeometry = new THREE.BufferGeometry().setFromPoints(points);
-    const orbitMaterial = new THREE.LineBasicMaterial({
-      color: 0xb4a37d,
-      transparent: true,
-      opacity: 0.34
-    });
-    const orbitLine = new THREE.LineLoop(orbitGeometry, orbitMaterial); // Usamos LineLoop para fechar a Ã³rbita
-
-    orbitLine.visible = false;
-    tnoOrbit.add(orbitLine);
-
     const startAngle = Math.random() * Math.PI * 2;
     // CORREÃ‡ÃƒO ESSENCIAL: O mÃ©todo getPoint(t) da EllipseCurve requer 't' no intervalo [0, 1].
     const startPoint = orbitCurve.getPoint(startAngle / (2 * Math.PI));
@@ -826,8 +778,8 @@ function createTNOs() {
     tno.position.z = startPoint.y; // Y da curva se torna Z do mundo (no espaÃ§o local do tnoOrbit)
     tnoOrbit.add(tno);
 
-    const tnoTrail = new Trail(0xa99bd8, 650);
-    scene.add(tnoTrail.line);
+    const tnoTrail = new Trail(0xa99bd8, 64);
+    tnoOrbit.add(tnoTrail.line);
 
     tnos.push({
       tno,
@@ -837,7 +789,6 @@ function createTNOs() {
       i,
       currentAngle: startAngle,
       orbitCurve,
-      orbitLine,
       trail: tnoTrail
     });
     clickableObjects.push(tno);
@@ -851,114 +802,31 @@ function createTNOs() {
 }
 
 function createComets() {
-  const sunSize = celestialData.find((d) => d.name === 'Sol').size;
   const scaleFactor = ORBIT_SCALE_UNITS_PER_AU;
-
   const cometHeadTexture = textureLoader.load('assets/textures/comet_head_mesh.jpg');
 
-  function generateNoise(x, y, z, scale = 0.5) {
-    return (
-      (Math.sin(x * scale) + Math.sin(y * scale + Math.PI / 2) + Math.sin(z * scale + Math.PI)) / 3
-    );
-  }
-
   cometData.forEach((data) => {
-    const baseGeometry = new THREE.SphereGeometry(0.5, 32, 32);
-    const positions = baseGeometry.attributes.position;
-    const tempPositions = [];
-
-    for (let i = 0; i < positions.count; i++) {
-      const vertex = new THREE.Vector3().fromBufferAttribute(positions, i);
-      const noise = generateNoise(vertex.x, vertex.y, vertex.z, 0.2);
-      const deformationFactor = 1 + noise * 0.3;
-      vertex.multiplyScalar(deformationFactor);
-      tempPositions.push(vertex.x, vertex.y, vertex.z);
-    }
-    baseGeometry.setAttribute('position', new THREE.Float32BufferAttribute(tempPositions, 3));
-    baseGeometry.computeVertexNormals();
-
     const cometMaterial = new THREE.MeshStandardMaterial({
       map: cometHeadTexture,
-      color: 0xffffff,
-      roughness: 0.8,
-      metalness: 0.1,
-      emissive: new THREE.Color(0xffffff),
-      emissiveIntensity: 0.7
+      color: 0xaaa092,
+      roughness: 0.98,
+      metalness: 0.0
     });
-    const comet = new THREE.Mesh(baseGeometry, cometMaterial);
+    const comet = new THREE.Mesh(createCometNucleusGeometry(0.5), cometMaterial);
     comet.userData = { ...data, isComet: true };
     occluders.push(comet);
-
-    const numParticles = 1000;
-    const tailGeometry = new THREE.BufferGeometry();
-    const tailPositions = new Float32Array(numParticles * 3);
-    const tailColors = new Float32Array(numParticles * 3);
-    const tailSizes = new Float32Array(numParticles);
-
-    const particleData = [];
-    const tailLength = 15;
-    const tailWidth = 3;
-
-    const colorDustStart = new THREE.Color(0xfffff0);
-    const colorDustEnd = new THREE.Color(0x000000);
-    const colorIonStart = new THREE.Color(0xb4b4ff);
-    const colorIonEnd = new THREE.Color(0x000000);
-
-    for (let i = 0; i < numParticles; i++) {
-      const z = -Math.random() * tailLength;
-      const r = (Math.random() * 0.5 + 0.5) * tailWidth * (1 - Math.abs(z) / tailLength);
-      const phi = Math.random() * Math.PI * 2;
-      const x = r * Math.cos(phi);
-      const y = r * Math.sin(phi);
-
-      tailPositions[i * 3 + 0] = x;
-      tailPositions[i * 3 + 1] = y;
-      tailPositions[i * 3 + 2] = z;
-
-      const fadeFactor = Math.abs(positions[i * 3 + 2]) / tailLength;
-      const color =
-        i % 2 === 0
-          ? colorDustStart.clone().lerp(colorDustEnd, fadeFactor)
-          : colorIonStart.clone().lerp(colorIonEnd, fadeFactor);
-      tailColors[i * 3 + 0] = color.r;
-      tailColors[i * 3 + 1] = color.g;
-      tailColors[i * 3 + 2] = color.b;
-
-      tailSizes[i] = 0.05 + Math.random() * 0.1;
-
-      particleData.push({
-        velocity: new THREE.Vector3(
-          (Math.random() - 0.5) * 0.05,
-          (Math.random() - 0.5) * 0.05,
-          -(0.05 + Math.random() * 0.1)
-        ),
-        age: Math.random() * tailLength
-      });
-    }
-
-    tailGeometry.setAttribute('position', new THREE.BufferAttribute(tailPositions, 3));
-    tailGeometry.setAttribute('color', new THREE.BufferAttribute(tailColors, 3));
-    tailGeometry.setAttribute('size', new THREE.Float32BufferAttribute(tailSizes, 1));
-
-    const tailMaterial = new THREE.PointsMaterial({
-      vertexColors: true,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      size: 0.1,
-      sizeAttenuation: true
+    const tailLength = Math.max(18, Math.min(68, 12 + Math.sqrt(data.a) * 4.2));
+    const updateVisual = addCometEffects(comet, {
+      radius: 0.5,
+      tailLength,
+      colors: data.visual
     });
-
-    const cometTail = new THREE.Points(tailGeometry, tailMaterial);
-    comet.add(cometTail);
-    comet.userData.particleData = particleData;
-    comet.userData.tailLength = tailLength;
 
     const cometLabelDiv = document.createElement('div');
     cometLabelDiv.className = 'planet-label category-comet';
     cometLabelDiv.textContent = data.name.toUpperCase();
     document.getElementById('labels-container').appendChild(cometLabelDiv);
-    const cometTrail = new Trail(0x9dd2c3, 650);
-    scene.add(cometTrail.line);
+    const cometTrail = new Trail(0x9dd2c3, 64);
 
     let a = data.a * scaleFactor;
     const e = data.e;
@@ -966,38 +834,11 @@ function createComets() {
     let b = a * Math.sqrt(1 - e * e);
     let c = a * e;
 
-    const scaledPerihelion = data.q * scaleFactor;
-    const minPerihelion = sunSize + 2;
-    if (scaledPerihelion < minPerihelion) {
-      a = minPerihelion / (1 - e);
-      c = a * e;
-      b = a * Math.sqrt(1 - e * e);
-    }
-
     const cometOrbit = new THREE.Object3D();
     scene.add(cometOrbit);
 
     // CORREÃ‡ÃƒO: A curva elÃ­ptica deve ter o centro em (-c, 0) para que o foco (Sol) fique na origem (0,0)
-    const orbitPoints = new THREE.EllipseCurve(-c, 0, a, b, 0, 2 * Math.PI, true, 0).getPoints(
-      1000
-    );
-
-    // Mapeia os pontos para o plano XZ (onde Y do ponto se torna Z na cena)
-    const mappedPoints = orbitPoints.map((p) => new THREE.Vector3(p.x, 0, p.y));
-
-    const orbitGeometry = new THREE.BufferGeometry().setFromPoints(mappedPoints);
-
-    // --- INÃCIO DA MUDANÃ‡A: Estilo da Ã³rbita dos Cometas ---
-    const orbitMaterial = new THREE.LineBasicMaterial({
-      color: 0x8ca8ad,
-      transparent: true,
-      opacity: 0.34
-    });
-    const orbitLine = new THREE.LineLoop(orbitGeometry, orbitMaterial); // LineLoop para fechar a Ã³rbita
-    // --- FIM DA MUDANÃ‡A ---
-
-    orbitLine.visible = false;
-    cometOrbit.add(orbitLine);
+    cometOrbit.add(cometTrail.line);
     cometOrbit.rotation.x = i;
 
     cometOrbit.add(comet);
@@ -1019,8 +860,7 @@ function createComets() {
       e: e,
       i: i,
       currentAngle: startAngle,
-      tail: cometTail,
-      orbitLine,
+      updateVisual,
       orbitCurve,
       orbitSpeedFactor: 0.005,
       labelDiv: cometLabelDiv,
@@ -1076,7 +916,8 @@ function createMoons() {
     });
     const moon = new THREE.Mesh(moonGeometry, moonMaterial);
     const moonOrbitGroup = new THREE.Group();
-    parentPlanetObj.planet.add(moonOrbitGroup);
+    parentPlanetObj.orbitGroup.add(moonOrbitGroup);
+    moonOrbitGroup.position.copy(parentPlanetObj.planet.position);
 
     const inclinationRad = data.inclination * (Math.PI / 180);
     moonOrbitGroup.rotation.x = inclinationRad;
@@ -1104,12 +945,12 @@ function createMoons() {
 
     // CORRIGIDO: Usa o fator de escala ajustado
     const moonOrbitRadius = data.position * orbitDistanceFactor;
+
     // ...
     const startAngle = Math.random() * Math.PI * 2;
 
-    const trail = new Trail(0xc6cbd0, 700);
-    scene.add(trail.line);
-    moonTrails.push({ moon, trail });
+    const trail = new Trail(0xc6cbd0, 48);
+    moonOrbitGroup.add(trail.line);
 
     // --- NOVO: LÃ“GICA DA ATMOSFERA (Para Titã) ---
     // --- FIM LÃ“GICA DA ATMOSFERA ---
@@ -1132,6 +973,8 @@ function createMoons() {
       rotationSpeed: data.rotationSpeed,
       orbitSpeed: moonOrbitSpeed,
       orbitAngle: startAngle,
+      centerObject: parentPlanetObj.planet,
+      trail,
       labelDiv
     });
 
@@ -1266,10 +1109,11 @@ const asteroidGeometry = new THREE.SphereGeometry(0.2, 8, 8);
 const asteroidBaseTexture = textureLoader.load('assets/textures/asteroid_texture.jpg'); // Corrigido
 const asteroidMaterial = new THREE.MeshStandardMaterial({
   map: asteroidBaseTexture,
+  emissiveMap: asteroidBaseTexture,
+  emissive: new THREE.Color(0x9a7850),
+  emissiveIntensity: 0.72,
   roughness: 0.8,
-  metalness: 0.1,
-  emissive: new THREE.Color(0x000000),
-  emissiveIntensity: 0.05
+  metalness: 0.0
 });
 
 const asteroidGroup = new THREE.Group();
@@ -1296,10 +1140,11 @@ const kuiperGeometry = new THREE.SphereGeometry(2, 4, 4); // Esferas maiores e m
 const kuiperBaseTexture = textureLoader.load('assets/textures/kuiper_texture.jpg');
 const kuiperMaterial = new THREE.MeshStandardMaterial({
   map: kuiperBaseTexture,
+  emissiveMap: kuiperBaseTexture,
+  emissive: new THREE.Color(0x77716a),
+  emissiveIntensity: 0.3,
   roughness: 0.9,
-  metalness: 0.1,
-  emissive: new THREE.Color(0x3333ff), // Brilho azul/roxo sutil para o gelo
-  emissiveIntensity: 0.1
+  metalness: 0.0
 });
 const kuiperGroup = new THREE.Group();
 scene.add(kuiperGroup);
@@ -1311,7 +1156,6 @@ createTNOs();
 createComets();
 createMajorTNOs(); // CORRIGIDO: Agora tem a lÃ³gica de cÃ¡lculo elÃ­ptico dentro
 createBlackHoles(); // NOVO: Chama a criaÃ§Ã£o dos buracos negros
-createUnifiedOrbits();
 setupBackground(); // Chamada para configurar o background
 createGalaxyBackground(); // Chamada para o novo fundo plano da galÃ¡xia
 createKuiperBelt(); // Chamada para criar o cinturÃ£o de Kuiper
@@ -1321,6 +1165,7 @@ window.addEventListener('wheel', onMouseWheel, false);
 document.addEventListener('keydown', onKeyDown, false);
 
 function onMouseWheel(event) {
+  if (selectedObject) return;
   if (selectedObject && !isCameraFree) {
     // Altera a distÃ¢ncia de zoom com base na direÃ§Ã£o da roda do mouse
     // Multiplicamos por um fator de aceleraÃ§Ã£o para um zoom mais suave
@@ -1417,6 +1262,7 @@ function onDocumentClick(event) {
       newSelectedObject.userData.isSun ||
       newSelectedObject.userData.isPlanet ||
       newSelectedObject.userData.isMoon ||
+      newSelectedObject.userData.isMoonOfTNO ||
       newSelectedObject.userData.isMajorTNO ||
       newSelectedObject.userData.isTNO ||
       newSelectedObject.userData.isComet
@@ -1648,7 +1494,7 @@ function calculateMinZoomDistance(object) {
   // Calcula a distÃ¢ncia mÃ­nima com base no raio da atmosfera
   // A distÃ¢ncia deve ser um pouco maior que o raio * multiplicador da atmosfera
   // Retorna um mÃ­nimo absoluto de 1 para evitar valores minÃºsculos
-  return Math.max(1, radius * 1.5);
+  return Math.max(0.0005, radius * 1.5);
 }
 
 export function selectObject(nameToFind) {
@@ -1667,41 +1513,30 @@ export function selectObject(nameToFind) {
     return;
   }
 
-  const opensDedicatedViewer =
-    object.userData.isBlackHole ||
-    object.userData.isSun ||
-    object.userData.isPlanet ||
-    object.userData.isMoon ||
-    object.userData.isMoonOfTNO ||
-    object.userData.isMajorTNO ||
-    object.userData.isTNO ||
-    object.userData.isComet;
-
-  if (opensDedicatedViewer) {
-    deselectObject();
-    openObjectViewer(object.userData);
-    restoreMainNavigation();
-    return;
-  }
-
   deselectObject();
 
   selectedObject = object;
+  dedicatedViewerBtn.disabled = false;
 
-  // NOVO: Define o estado inicial como cÃ¢mera fixa
-  isCameraFree = false;
-  controls.enabled = false;
-
-  // Remove a classe 'active' do botÃ£o de cÃ¢mera livre
-  document.getElementById('toggle-camera-btn').classList.remove('active');
-
-  if (!opensDedicatedViewer) {
-    updateInfoOverlay(object.userData);
-    zoomControlsContainer.style.display = 'flex';
+  if (object.userData.isBlackHole) {
+    isCameraFree = true;
+    controls.enabled = true;
+    toggleCameraBtn.classList.remove('active');
+    hideInfoOverlay();
+    zoomControlsContainer.style.display = 'none';
+    return;
   }
+
+  isCameraFree = true;
+  controls.enabled = true;
+  document.getElementById('toggle-camera-btn').classList.add('active');
+  hideInfoOverlay();
+  zoomControlsContainer.style.display = 'flex';
 
   // *** INÃCIO DA CORREÃ‡ÃƒO DE ZOOM INICIAL ***
   const minZoom = calculateMinZoomDistance(selectedObject);
+  camera.near = Math.min(0.1, Math.max(0.00005, minZoom * 0.1));
+  camera.updateProjectionMatrix();
   let targetRadius =
     selectedObject.geometry && selectedObject.geometry.parameters.radius
       ? selectedObject.geometry.parameters.radius
@@ -1716,17 +1551,25 @@ export function selectObject(nameToFind) {
     // O minZoom jÃ¡ considera o rsRadius*5. Multiplicamos por 10 o meshRadius.
     currentZoomDistance = Math.max(minZoom, selectedObject.userData.sceneSize * 10);
   } else if (selectedObject.userData.isPlanet) {
-    // Usamos um valor base de 50 para os planetas internos garantindo a visibilidade
-    currentZoomDistance = Math.max(minZoom, targetRadius * 4, 50);
+    currentZoomDistance = Math.max(minZoom, targetRadius * 3);
   } else if (selectedObject.userData.isMoon || selectedObject.userData.isMoonOfTNO) {
     // Luas sÃ£o muito pequenas, multiplicamos mais
-    currentZoomDistance = Math.max(minZoom, targetRadius * 25);
+    currentZoomDistance = Math.max(minZoom, targetRadius * 4);
   } else if (selectedObject.userData.isTNO || selectedObject.userData.isMajorTNO) {
     // TNOs sÃ£o pequenos
-    currentZoomDistance = Math.max(minZoom, targetRadius * 30);
+    currentZoomDistance = Math.max(minZoom, targetRadius * 3);
   } else if (selectedObject.userData.isComet) {
-    currentZoomDistance = Math.max(minZoom, 15);
+    currentZoomDistance = Math.max(minZoom, targetRadius * 6, 3);
   }
+  const inspectionTarget = new THREE.Vector3();
+  selectedObject.getWorldPosition(inspectionTarget);
+  controls.target.copy(inspectionTarget);
+  controls.minDistance = minZoom;
+  controls.maxDistance = Math.max(currentZoomDistance * 100, minZoom * 100, 100);
+  camera.position
+    .copy(inspectionTarget)
+    .add(new THREE.Vector3(0, currentZoomDistance * 0.28, currentZoomDistance));
+  controls.update();
   // *** FIM DA CORREÃ‡ÃƒO DE ZOOM INICIAL ***
 }
 
@@ -1763,8 +1606,13 @@ function deselectObject() {
     }
 
     selectedObject = null;
+    dedicatedViewerBtn.disabled = true;
+    camera.near = 0.1;
+    camera.updateProjectionMatrix();
 
     controls.enabled = true;
+    controls.minDistance = 20;
+    controls.maxDistance = 20000000;
     controls.target.set(0, 0, 0);
 
     hideInfoOverlay();
@@ -2065,8 +1913,13 @@ let zoomInterval = null;
 
 function startZoomIn() {
   if (zoomInterval) clearInterval(zoomInterval);
-  zoomInterval = setInterval(() => {
-    if (selectedObject && !isCameraFree) {
+  const zoomStep = () => {
+    if (selectedObject && isCameraFree) {
+      const offset = camera.position.clone().sub(controls.target);
+      const distance = Math.max(controls.minDistance, offset.length() * 0.98);
+      camera.position.copy(controls.target).add(offset.setLength(distance));
+      controls.update();
+    } else if (selectedObject && !isCameraFree) {
       const minZoomDistance = calculateMinZoomDistance(selectedObject);
       // Reduz a distÃ¢ncia com uma aceleraÃ§Ã£o suave
       currentZoomDistance = Math.max(minZoomDistance, currentZoomDistance * 0.98);
@@ -2074,13 +1927,20 @@ function startZoomIn() {
       camera.position.multiplyScalar(0.98);
       controls.update();
     }
-  }, 16); // ~60 FPS
+  };
+  zoomStep();
+  zoomInterval = setInterval(zoomStep, 16);
 }
 
 function startZoomOut() {
   if (zoomInterval) clearInterval(zoomInterval);
-  zoomInterval = setInterval(() => {
-    if (selectedObject && !isCameraFree) {
+  const zoomStep = () => {
+    if (selectedObject && isCameraFree) {
+      const offset = camera.position.clone().sub(controls.target);
+      const distance = Math.min(controls.maxDistance, offset.length() * 1.02);
+      camera.position.copy(controls.target).add(offset.setLength(distance));
+      controls.update();
+    } else if (selectedObject && !isCameraFree) {
       // Aumenta o maxZoom para a transiÃ§Ã£o interestelar (400.000)
       // Se o objeto for um Buraco Negro, permitimos um zoom-out maior
       let maxZoomDistance = 500;
@@ -2096,7 +1956,9 @@ function startZoomOut() {
       camera.position.multiplyScalar(1.02);
       controls.update();
     }
-  }, 16);
+  };
+  zoomStep();
+  zoomInterval = setInterval(zoomStep, 16);
 }
 
 function stopZoom() {
@@ -2104,15 +1966,29 @@ function stopZoom() {
   zoomInterval = null;
 }
 
-zoomInBtn.addEventListener('mousedown', startZoomIn);
-zoomOutBtn.addEventListener('mousedown', startZoomOut);
-zoomInBtn.addEventListener('mouseup', stopZoom);
-zoomOutBtn.addEventListener('mouseup', stopZoom);
-zoomInBtn.addEventListener('mouseout', stopZoom);
-zoomOutBtn.addEventListener('mouseout', stopZoom);
+zoomInBtn.addEventListener('pointerdown', startZoomIn);
+zoomOutBtn.addEventListener('pointerdown', startZoomOut);
+document.addEventListener('pointerup', stopZoom);
+document.addEventListener('pointercancel', stopZoom);
+zoomInBtn.addEventListener('pointerleave', stopZoom);
+zoomOutBtn.addEventListener('pointerleave', stopZoom);
+zoomInBtn.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' || event.key === ' ') startZoomIn();
+});
+zoomOutBtn.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' || event.key === ' ') startZoomOut();
+});
+zoomInBtn.addEventListener('keyup', stopZoom);
+zoomOutBtn.addEventListener('keyup', stopZoom);
 
 // NOVO: Evento para o botÃ£o de alternar a cÃ¢mera
 toggleCameraBtn.addEventListener('click', () => {
+  if (selectedObject) {
+    isCameraFree = true;
+    controls.enabled = true;
+    toggleCameraBtn.classList.add('active');
+    return;
+  }
   isCameraFree = !isCameraFree;
   const btn = document.getElementById('toggle-camera-btn');
 
@@ -2417,8 +2293,8 @@ function updateInterstellarTransition() {
   }
 
   // CORREÃ‡ÃƒO: Mesh do Sol (sunObject.planet) desaparece na transiÃ§Ã£o
-  if (sunObject.planet.material.transparent === true) {
-    sunObject.planet.material.opacity = 1.0 - t; // Mesh desaparece de 1.0 para 0.0
+  if (sunObject.planet.material.uniforms?.opacity) {
+    sunObject.planet.material.uniforms.opacity.value = 1.0 - t;
   }
   sunObject.planet.visible = 1.0 - t > 0.05; // Esconde quando a opacidade estÃ¡ muito baixa
 
@@ -2465,26 +2341,6 @@ function updateInterstellarTransition() {
     });
 
     // Resetar opacidade das Ã³rbitas
-    unifiedOrbits.planets.children.forEach((group) => {
-      group.children.forEach((mesh) => {
-        if (mesh.material && mesh.material.transparent) mesh.material.opacity = 0.1;
-      });
-    });
-    unifiedOrbits.majorTnos.children.forEach((group) => {
-      group.children.forEach((mesh) => {
-        if (mesh.material && mesh.material.transparent) mesh.material.opacity = 0.1;
-      });
-    });
-    unifiedOrbits.tnos.children.forEach((group) => {
-      group.children.forEach((mesh) => {
-        if (mesh.material && mesh.material.transparent) mesh.material.opacity = 0.8;
-      });
-    });
-    unifiedOrbits.comets.children.forEach((group) => {
-      group.children.forEach((mesh) => {
-        if (mesh.material && mesh.material.transparent) mesh.material.opacity = 0.8;
-      });
-    });
 
     // Rótulo do Sol: Oculto (pois estÃ¡ muito prÃ³ximo e ofuscante)
     if (sunObject && sunObject.labelDiv) {
@@ -2524,10 +2380,6 @@ function updateInterstellarTransition() {
       if (tno.tno.material instanceof THREE.MeshStandardMaterial) {
         tno.tno.material.opacity = opacityPlanets;
       }
-      // Fade nas linhas de Ã³rbita dos TNOs
-      if (tno.orbitLine.material && tno.orbitLine.material.transparent) {
-        tno.orbitLine.material.opacity = opacityPlanets * 0.8;
-      }
     });
 
     comets.forEach((c) => {
@@ -2535,25 +2387,9 @@ function updateInterstellarTransition() {
       if (c.comet.material instanceof THREE.MeshStandardMaterial) {
         c.comet.material.opacity = opacityPlanets;
       }
-      // Fade nas linhas de Ã³rbita dos Cometas
-      if (c.orbitLine.material && c.orbitLine.material.transparent) {
-        c.orbitLine.material.opacity = opacityPlanets * 0.8;
-      }
     });
 
     // As Ã³rbitas dos planetas principais e TNOs tambÃ©m devem sumir
-    unifiedOrbits.planets.children.forEach((group) => {
-      group.children.forEach((mesh) => {
-        if (mesh.material && mesh.material.transparent)
-          mesh.material.opacity = 0.1 * opacityPlanets;
-      });
-    });
-    unifiedOrbits.majorTnos.children.forEach((group) => {
-      group.children.forEach((mesh) => {
-        if (mesh.material && mesh.material.transparent)
-          mesh.material.opacity = 0.1 * opacityPlanets;
-      });
-    });
 
     // NOVO: Buracos Negros ficam visÃ­veis e opacos
     blackHoles.forEach((bh) => (bh.bhMesh.visible = true));
@@ -2595,21 +2431,17 @@ function updateInterstellarTransition() {
 function animate() {
   try {
     requestAnimationFrame(animate);
+    advanceTimelineComparison();
 
     // CORREÃ‡ÃƒO: Captura o estado interestelar da transiÃ§Ã£o
     const isInterstellar = updateInterstellarTransition();
 
-    const colorDustStart = new THREE.Color(0xfffff0);
-    const colorDustEnd = new THREE.Color(0x000000);
-    const colorIonStart = new THREE.Color(0xb4b4ff);
-    const colorIonEnd = new THREE.Color(0x000000);
-
     // PosiÃ§Ã£o da cÃ¢mera no mundo para o cÃ¡lculo do shader
 
     // CORREÃ‡ÃƒO: Rotaciona o Object3D pai para mover todos os filhos (mesh, luzes, glows)
-    if (sunObject.planet.parent) {
-      sunObject.planet.parent.rotation.y += 0.0005;
-    }
+    sunObject.planet.rotation.y += sunObject.planet.userData.rotationSpeed || 0.00018;
+    if (sunObject.planet.material.uniforms?.time)
+      sunObject.planet.material.uniforms.time.value += 0.016;
 
     if (sunObject) {
       // CORREÃ‡ÃƒO: ObtÃ©m a posiÃ§Ã£o do Object3D pai para o cÃ¡lculo de distÃ¢ncia
@@ -2647,7 +2479,7 @@ function animate() {
 
     planets.forEach((p) => {
       p.planet.rotation.y += p.rotationSpeed;
-      p.orbitAngle += p.orbitSpeed;
+      if (!timelinePhaseAnchor) p.orbitAngle += p.orbitSpeed;
 
       // --- NOVO: CÃ¡lculo de Ã³rbita ElÃ­ptica com o Sol no foco (FÃ³rmula Polar) ---
       // A Ã³rbita Ã© calculada em torno do Sol (origem 0,0,0)
@@ -2659,9 +2491,12 @@ function animate() {
       p.planet.position.z = r * Math.sin(p.orbitAngle);
 
       // Ajustamos o Trail para seguir a nova posiÃ§Ã£o
-      const planetWorldPosition = new THREE.Vector3();
-      p.planet.getWorldPosition(planetWorldPosition);
-      p.trail.addPoint(planetWorldPosition);
+      updateOrbitTrail(
+        p.trail,
+        p.orbitAngle,
+        (angle) => pointOnEllipticalOrbit(p.semiMajorAxis, p.eccentricity, angle),
+        p.orbitSpeed
+      );
 
       // NOVO: Atualiza o vetor de visÃ£o para o Shader da Atmosfera (se houver)
       updatePlanetLabel(p);
@@ -2669,20 +2504,23 @@ function animate() {
 
     moons.forEach((m) => {
       m.moon.rotation.y += m.rotationSpeed;
-      m.orbitAngle += m.orbitSpeed;
+      m.orbitGroup.position.copy(m.centerObject.position);
+      if (!timelinePhaseAnchor) m.orbitAngle += m.orbitSpeed;
       m.moon.position.x = m.orbitRadius * Math.cos(m.orbitAngle);
       m.moon.position.z = m.orbitRadius * Math.sin(m.orbitAngle);
+      updateOrbitTrail(
+        m.trail,
+        m.orbitAngle,
+        (angle) =>
+          new THREE.Vector3(m.orbitRadius * Math.cos(angle), 0, m.orbitRadius * Math.sin(angle)),
+        m.orbitSpeed
+      );
 
       // NOVO: Atualiza o vetor de visÃ£o para o Shader da Atmosfera (se houver)
       updateMoonLabel(m);
     });
 
     // Novo loop para os trails dos satÃ©lites de TNOs
-    tnoMoonTrails.forEach(({ moon, trail }) => {
-      const position = new THREE.Vector3();
-      moon.getWorldPosition(position);
-      trail.addPoint(position);
-    });
 
     // --- NOVO LOOP: Buracos Negros ---
     blackHoles.forEach((bh) => {
@@ -2700,7 +2538,7 @@ function animate() {
     // --- NOVO LOOP: TNOs Principais com Órbita ElÃ­ptica e Trail ---
     majorTNOs.forEach((tno) => {
       tno.tno.rotation.y += tno.rotationSpeed;
-      tno.orbitAngle += tno.orbitSpeed;
+      if (!timelinePhaseAnchor) tno.orbitAngle += tno.orbitSpeed;
 
       // --- CÃLCULO DE Ã“RBITA ELÃPTICA (TNOs Principais) ---
       // r = a * (1 - e^2) / (1 + e * cos(theta))
@@ -2713,18 +2551,27 @@ function animate() {
       tno.tno.position.z = r * Math.sin(tno.orbitAngle);
 
       // Adiciona ponto ao Trail
-      const tnoWorldPosition = new THREE.Vector3();
-      tno.tno.getWorldPosition(tnoWorldPosition);
-      tno.trail.addPoint(tnoWorldPosition);
+      updateOrbitTrail(
+        tno.trail,
+        tno.orbitAngle,
+        (angle) => pointOnEllipticalOrbit(tno.semiMajorAxis, tno.eccentricity, angle),
+        tno.orbitSpeed
+      );
 
       updatePlanetLabel({ planet: tno.tno, labelDiv: tno.labelDiv });
+    });
+
+    moons.forEach((moon) => {
+      if (moon.centerObject.userData.isMajorTNO) {
+        moon.orbitGroup.position.copy(moon.centerObject.position);
+      }
     });
 
     // --- CORREÃ‡ÃƒO DO LOOP: TNOs Menores (de tno_data.js) ---
     tnos.forEach((tno) => {
       // Ajustei a velocidade para ser mais visÃ­vel na simulaÃ§Ã£o
       const tnoOrbitSpeed = 0.00008;
-      tno.currentAngle += tnoOrbitSpeed / Math.pow(tno.a, 1.5);
+      if (!timelinePhaseAnchor) tno.currentAngle += tnoOrbitSpeed / Math.pow(tno.a, 1.5);
 
       // CORREÃ‡ÃƒO: Normaliza currentAngle para o intervalo [0, 1] para o mÃ©todo getPoint(t)
       const normalizedTime = (tno.currentAngle % (2 * Math.PI)) / (2 * Math.PI);
@@ -2734,73 +2581,49 @@ function animate() {
       // CORREÃ‡ÃƒO: Posiciona o TNO no plano XZ do seu grupo orbital, para que a rotaÃ§Ã£o de inclinaÃ§Ã£o funcione.
       tno.tno.position.set(newPoint.x, 0, newPoint.y);
       if (tno.trail) {
-        const tnoWorldPosition = new THREE.Vector3();
-        tno.tno.getWorldPosition(tnoWorldPosition);
-        tno.trail.addPoint(tnoWorldPosition);
+        updateOrbitTrail(
+          tno.trail,
+          tno.currentAngle,
+          (angle) => pointOnCurveOrbit(tno.orbitCurve, angle),
+          tnoOrbitSpeed / Math.pow(tno.a, 1.5)
+        );
       }
     });
 
     comets.forEach((c) => {
       const angleSpeed = c.orbitSpeedFactor / Math.pow(c.a, 1.5);
-      c.currentAngle += angleSpeed;
+      if (!timelinePhaseAnchor) c.currentAngle += angleSpeed;
       // CORREÃ‡ÃƒO: Usando getPoint(t/T) para o cÃ¡lculo da posiÃ§Ã£o na curva elÃ­ptica
       const normalizedTime = (c.currentAngle % (2 * Math.PI)) / (2 * Math.PI);
       const newPoint = c.orbitCurve.getPoint(normalizedTime);
 
       c.comet.position.set(newPoint.x, 0, newPoint.y); // O eixo Y da curva se torna Z do mundo (XZ Plane) - e Y do objeto Ã© 0.
 
-      const cometWorldPosition = new THREE.Vector3();
-      c.comet.getWorldPosition(cometWorldPosition);
-      const sunWorldPosition = new THREE.Vector3();
-      // CORREÃ‡ÃƒO: PosiÃ§Ã£o do Object3D pai do Sol
-      sunObject.planet.parent.getWorldPosition(sunWorldPosition);
-      const directionToSun = new THREE.Vector3()
-        .subVectors(cometWorldPosition, sunWorldPosition)
-        .normalize();
-
-      c.tail.lookAt(directionToSun.add(cometWorldPosition));
-
-      const positions = c.tail.geometry.attributes.position.array;
-      const colors = c.tail.geometry.attributes.color.array;
-      const particleData = c.comet.userData.particleData;
-      const tailLength = c.comet.userData.tailLength;
-
-      for (let i = 0; i < particleData.length; i++) {
-        const i3 = i * 3;
-        positions[i3 + 2] += particleData[i].velocity.z;
-
-        if (positions[i3 + 2] < -tailLength) {
-          positions[i3 + 2] = 0;
-        }
-
-        const fadeFactor = Math.abs(positions[i3 + 2]) / tailLength;
-        if (i % 2 === 0) {
-          const color = colorDustStart.clone().lerp(colorDustEnd, fadeFactor);
-          colors[i3 + 0] = color.r;
-          colors[i3 + 1] = color.g;
-          colors[i3 + 2] = color.b;
-        } else {
-          const color = colorIonStart.clone().lerp(colorIonEnd, fadeFactor);
-          colors[i3 + 0] = color.r;
-          colors[i3 + 1] = color.g;
-          colors[i3 + 2] = color.b;
-        }
-
-        c.tail.material.opacity = 1.0 - fadeFactor * 0.5;
-      }
-
-      c.tail.geometry.attributes.position.needsUpdate = true;
-      c.tail.geometry.attributes.color.needsUpdate = true;
-      if (c.trail) {
-        c.trail.addPoint(cometWorldPosition);
-      }
+      const antiSolarDirection = new THREE.Vector3(
+        c.comet.position.x,
+        0,
+        c.comet.position.z
+      ).normalize();
+      const orbitalTangent2D = c.orbitCurve.getTangent(normalizedTime);
+      const orbitalVelocity = new THREE.Vector3(
+        orbitalTangent2D.x,
+        0,
+        orbitalTangent2D.y
+      ).normalize();
+      const distanceInAU = c.comet.position.length() / ORBIT_SCALE_UNITS_PER_AU;
+      const activity = THREE.MathUtils.clamp(
+        1.25 / Math.sqrt(Math.max(distanceInAU, 0.05)),
+        0.12,
+        1
+      );
+      c.updateVisual(antiSolarDirection, orbitalVelocity, performance.now() / 1000, activity);
+      updateOrbitTrail(
+        c.trail,
+        c.currentAngle,
+        (angle) => pointOnCurveOrbit(c.orbitCurve, angle),
+        angleSpeed
+      );
       updateCometLabel(c);
-    });
-
-    moonTrails.forEach(({ moon, trail }) => {
-      const position = new THREE.Vector3();
-      moon.getWorldPosition(position);
-      trail.addPoint(position);
     });
 
     asteroidGroup.rotation.y += 0.0001;
@@ -2937,7 +2760,7 @@ function animate() {
         selectedObjInfo.labelDiv.style.opacity = '1';
       }
       controls.enabled = false;
-    } else if (selectedObject && isCameraFree) {
+    } else if (selectedObject && isCameraFree && !selectedObject.userData.isBlackHole) {
       controls.enabled = true;
       const targetPosition = new THREE.Vector3();
       selectedObject.getWorldPosition(targetPosition);
@@ -2998,13 +2821,60 @@ const audioControls = document.getElementById('audio-controls');
 initializeControlPanels({
   planets,
   moons,
-  moonTrails,
-  tnoMoonTrails,
   majorTNOs,
   tnos,
   comets,
-  unifiedOrbits,
   kuiperGroup
+});
+const timeControlsButton = document.getElementById('time-controls-btn');
+const timeControlPanel = document.getElementById('time-control-panel');
+const yearSlider = document.getElementById('year-slider');
+const timeYearDisplay = document.getElementById('time-year-display');
+const timeCompareToggle = document.getElementById('time-compare-toggle');
+timeControlsButton.addEventListener('click', () => {
+  timeControlPanel.hidden = !timeControlPanel.hidden;
+  timeControlsButton.classList.toggle('active', !timeControlPanel.hidden);
+  timeControlsButton.setAttribute('aria-expanded', String(!timeControlPanel.hidden));
+});
+yearSlider.addEventListener('input', () => {
+  const years = Number(yearSlider.value);
+  if (timeCompareToggle.checked) {
+    beginTimelineComparison(years);
+  } else {
+    timelineAnimation = null;
+    applyTimelineYears(years);
+    timeYearDisplay.textContent =
+      years === 0 ? 'Hoje' : `+${years} ${years === 1 ? 'ano' : 'anos'}`;
+  }
+});
+timeCompareToggle.addEventListener('change', () => {
+  if (timeCompareToggle.checked) {
+    beginTimelineComparison(Number(yearSlider.value));
+    return;
+  }
+  if (timelineAnimation) {
+    const frozenYear = Math.round(timelineAnimation.year);
+    timelineAnimation = null;
+    yearSlider.value = String(frozenYear);
+    applyTimelineYears(frozenYear, true);
+    timeYearDisplay.textContent =
+      frozenYear === 0 ? 'Hoje' : `+${frozenYear} ${frozenYear === 1 ? 'ano' : 'anos'}`;
+  }
+});
+document.getElementById('year-step-back').addEventListener('click', () => {
+  yearSlider.value = String(Math.max(0, Number(yearSlider.value) - 1));
+  yearSlider.dispatchEvent(new Event('input', { bubbles: true }));
+});
+document.getElementById('year-step-forward').addEventListener('click', () => {
+  yearSlider.value = String(Math.min(250, Number(yearSlider.value) + 1));
+  yearSlider.dispatchEvent(new Event('input', { bubbles: true }));
+});
+document.getElementById('time-reset-btn').addEventListener('click', () => {
+  timelineAnimation = null;
+  timeCompareToggle.checked = false;
+  yearSlider.value = '0';
+  applyTimelineYears(0);
+  timeYearDisplay.textContent = 'Hoje';
 });
 initializeAudioPlayer(audioControls);
 initializeDateTime();
