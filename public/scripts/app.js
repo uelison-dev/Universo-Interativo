@@ -1,5 +1,5 @@
 ﻿import * as THREE from '../../node_modules/three/build/three.module.js'; // Corrigido para acessar o diretÃ³rio raiz
-import { OrbitControls } from '../../node_modules/three/examples/jsm/controls/OrbitControls.js'; // Corrigido
+import { OrbitControls } from '../libs/three/controls/OrbitControls.js'; // Corrigido
 import { celestialData } from '../../src/data/celestial_data.js';
 import { tnoData } from '../../src/data/tno_data.js';
 import { cometData } from '../../src/data/comet_data.js';
@@ -73,7 +73,8 @@ const zoomControlsContainer = document.getElementById('zoom-controls-container')
 const zoomInBtn = document.getElementById('zoom-in-btn');
 const zoomOutBtn = document.getElementById('zoom-out-btn');
 const toggleCameraBtn = document.getElementById('toggle-camera-btn');
-const electronIpc = typeof window.require === 'function' ? window.require('electron').ipcRenderer : null;
+const electronIpc =
+  typeof window.require === 'function' ? window.require('electron').ipcRenderer : null;
 
 function restoreMainNavigation() {
   selectedObject = null;
@@ -194,8 +195,7 @@ function openObjectViewer(data) {
     isMoonOfTNO: data.isMoonOfTNO,
     orbitSemiMajorAxis: data.positionX || data.a || data.position,
     orbitEccentricity: data.info?.['Excentricidade orbital'] || data.e || 0,
-    orbitInclination:
-      data.info?.['Inclinação orbital em graus'] || data.i || data.inclination || 0,
+    orbitInclination: data.info?.['Inclinação orbital em graus'] || data.i || data.inclination || 0,
     massSolar: data.massSolar,
     distanceLY: data.distanceLY,
     sceneSize: data.sceneSize,

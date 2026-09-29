@@ -23,8 +23,8 @@
     "electron",
     "threejs"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Uelison Ferreira",
+  "license": "UNLICENSED",
   "build": {
     "appId": "com.vuenar.universointerativo",
     "productName": "Universo Interativo",
@@ -41,6 +41,7 @@
       "src/**/*",
       "ui/**/*",
       "utils/**/*",
+      "node_modules/three/**/*",
       "!Backup{,/**}",
       "!build{,/**}",
       "!dist{,/**}",

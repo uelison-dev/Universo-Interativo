@@ -1,5 +1,5 @@
 import * as THREE from '../../node_modules/three/build/three.module.js';
-import { OrbitControls } from '../../node_modules/three/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from '../libs/three/controls/OrbitControls.js';
 import { createBlackHole, animateBlackHole } from '../../utils/black_hole.js';
 
 const { ipcRenderer } = window.require('electron');
@@ -97,13 +97,15 @@ function renderSatelliteSwitcher(data) {
     button.type = 'button';
     button.textContent = satellite.name;
     button.classList.toggle('active', data.name === satellite.name);
-    button.addEventListener('click', () => showObject({
-      ...satellite,
-      mode: 'celestial-body',
-      name: satellite.name,
-      type: satellite.type,
-      satellites: []
-    }));
+    button.addEventListener('click', () =>
+      showObject({
+        ...satellite,
+        mode: 'celestial-body',
+        name: satellite.name,
+        type: satellite.type,
+        satellites: []
+      })
+    );
     satelliteButtons.appendChild(button);
   });
 }
@@ -167,7 +169,8 @@ function createOrbit(data) {
   const points = [];
   for (let index = 0; index <= 160; index += 1) {
     const angle = (index / 160) * Math.PI * 2;
-    const radius = (orbitRadius * (1 - eccentricity * eccentricity)) / (1 + eccentricity * Math.cos(angle));
+    const radius =
+      (orbitRadius * (1 - eccentricity * eccentricity)) / (1 + eccentricity * Math.cos(angle));
     points.push(new THREE.Vector3(radius * Math.cos(angle), 0, radius * Math.sin(angle)));
   }
 
@@ -208,7 +211,9 @@ function changeZoom(multiplier) {
   camera.position.multiplyScalar(Math.min(Math.max(multiplier, 0.7), 1.3));
   const nextDistance = camera.position.length();
   if (nextDistance < controls.minDistance || nextDistance > controls.maxDistance) {
-    camera.position.setLength(Math.min(Math.max(distance * multiplier, controls.minDistance), controls.maxDistance));
+    camera.position.setLength(
+      Math.min(Math.max(distance * multiplier, controls.minDistance), controls.maxDistance)
+    );
   }
   controls.update();
 }
