@@ -16,6 +16,15 @@ const projectHighlights = [
 
 const patchNotes = [
   {
+    version: '6.36.1',
+    category: 'Arquivo de distruibuição',
+    title: 'Alterações dos imports e modules',
+    changes: [
+      'Alterações realizadas no construtor do da distribuição, pois o executável não estava abrindo o programa.',
+      'Corrigido os imports indicando os modules em seus novos caminhos para construção do .exe.'
+    ]
+  },
+  {
     version: '6.36.0',
     category: 'Viewer e Interação',
     title: 'Labels clicáveis e seletor de satélites',
