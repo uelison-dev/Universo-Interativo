@@ -12,7 +12,11 @@ import { Trail } from '../../utils/trail.js';
 // NOVO IMPORT: LÃ³gica de criaÃ§Ã£o do Buraco Negro
 import { createBlackHole, animateBlackHole } from '../../utils/black_hole.js';
 import { createSunSurfaceMaterial, createSunGlow } from '../../utils/sun_visual.js';
-import { createCometNucleusGeometry, addCometEffects } from '../../utils/comet_visual.js';
+import {
+  createCometNucleusGeometry,
+  addCometEffects,
+  getCometTailPresentation
+} from '../../utils/comet_visual.js';
 import { APP_VERSION } from './config.js';
 import { initializeAudioPlayer } from './modules/audio-player.js';
 import { initializeControlPanels } from './modules/control-panels.js';
@@ -21,6 +25,7 @@ import { initializeVersionDisplay } from './modules/version-display.js';
 
 // --- VariÃ¡veis Globais e ConfiguraÃ§Ã£o Inicial ---
 const scene = new THREE.Scene();
+const cometWorldPositionScratch = new THREE.Vector3();
 
 // Ajustamos o far para um valor alto para renderizar a transiÃ§Ã£o da galÃ¡xia (20.000.000)
 const camera = new THREE.PerspectiveCamera(
@@ -861,6 +866,7 @@ function createComets() {
       i: i,
       currentAngle: startAngle,
       updateVisual,
+      tailLength,
       orbitCurve,
       orbitSpeedFactor: 0.005,
       labelDiv: cometLabelDiv,
@@ -2616,7 +2622,22 @@ function animate() {
         0.12,
         1
       );
-      c.updateVisual(antiSolarDirection, orbitalVelocity, performance.now() / 1000, activity);
+      const cometWorldPosition = c.comet.getWorldPosition(cometWorldPositionScratch);
+      const tailPresentation = getCometTailPresentation(
+        cometWorldPosition,
+        camera,
+        renderer.domElement.clientHeight,
+        c.tailLength,
+        activity
+      );
+      c.updateVisual(
+        antiSolarDirection,
+        orbitalVelocity,
+        performance.now() / 1000,
+        activity,
+        tailPresentation.scale,
+        tailPresentation.visible
+      );
       updateOrbitTrail(
         c.trail,
         c.currentAngle,

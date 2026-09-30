@@ -9,6 +9,14 @@ if (typeof electron === 'string') {
 }
 
 const { app, BrowserWindow, ipcMain } = electron;
+const applicationIcon = path.join(
+  __dirname,
+  process.platform === 'win32' ? 'logo_atom.ico' : 'logo_atom.png'
+);
+
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.vuenar.universointerativo');
+}
 
 let launcherWindow = null;
 let mainWindow = null;
@@ -23,7 +31,7 @@ function createMainWindow() {
     show: false,
     backgroundColor: '#000000',
     autoHideMenuBar: true,
-    icon: path.join(__dirname, 'logo_atom.png'),
+    icon: applicationIcon,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -53,7 +61,7 @@ function createLauncherWindow() {
     resizable: true,
     backgroundColor: '#04060a',
     autoHideMenuBar: true,
-    icon: path.join(__dirname, 'logo_atom.png'),
+    icon: applicationIcon,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -81,7 +89,7 @@ function createBlackHoleWindow(data) {
     show: false,
     backgroundColor: '#020305',
     autoHideMenuBar: true,
-    icon: path.join(__dirname, 'logo_atom.png'),
+    icon: applicationIcon,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false

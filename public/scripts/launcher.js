@@ -16,6 +16,52 @@ const projectHighlights = [
 
 const patchNotes = [
   {
+    version: '6.39.14',
+    category: 'Documentação e identidade visual',
+    title: 'Ícone do projeto apresentado no README',
+    changes: ['O README agora mostra a identidade visual oficial do Universo Interativo.']
+  },
+  {
+    version: '6.39.4',
+    category: 'Correções visuais e fluidez',
+    title: 'Ícone do Windows e caudas mais estáveis',
+    changes: [
+      'O ícone do executável agora recebe os recursos da logo e exibe borda arredondada cinza-clara.',
+      'As caudas usam uma nuvem de partículas menor e sem shaders personalizados para aliviar a cena.',
+      'O movimento é limitado ao tempo do quadro; núcleo e coma foram preservados.'
+    ]
+  },
+  {
+    version: '6.39.3',
+    category: 'Identidade visual e cometas',
+    title: 'Logo do app e caudas mais sutis',
+    changes: [
+      'A logo cabe por inteiro no launcher e identifica o aplicativo e seus atalhos no Windows.',
+      'Os pixels das caudas se movem suavemente e o comprimento foi reduzido para uma cena mais limpa.',
+      'As caudas continuam discretamente visíveis à distância; núcleo e coma permanecem iguais.'
+    ]
+  },
+  {
+    version: '6.39.2',
+    category: 'Cometas e desempenho',
+    title: 'Caudas de partículas mais leves',
+    changes: [
+      'As fitas foram substituídas por nuvens compactas de pontos calculadas na GPU.',
+      'As cores separam a poeira refletora dos íons azulados conforme as paletas de cada cometa.',
+      'Núcleo e coma foram mantidos como estavam.'
+    ]
+  },
+  {
+    version: '6.39.1',
+    category: 'Cometas e desempenho',
+    title: 'Caudas adaptadas à distância da câmera',
+    changes: [
+      'A extensão visível das caudas se ajusta à aproximação e à distância.',
+      'Caudas imperceptíveis ou fora da tela são ocultadas, mantendo o núcleo e a coma.',
+      'O mesmo ajuste funciona na cena principal e na inspeção dedicada.'
+    ]
+  },
+  {
     version: '6.39.0',
     category: 'Visual e desempenho',
     title: 'Caudas dos cometas refeitas com brilho procedural',

@@ -690,7 +690,7 @@ body {
 }
 
 #visibility-menu::before {
-  content: 'VISIBILIDADE';
+  content: 'ÓRBITAS E CAMADAS';
   position: absolute;
   top: 14px;
   left: 16px;
@@ -942,7 +942,7 @@ body {
 #zoom-controls-container {
   position: fixed;
   right: 20px;
-  bottom: calc(20px + (var(--control-size) * 3) + (var(--control-gap) * 3));
+  bottom: calc(20px + (var(--control-size) * 5) + (var(--control-gap) * 6));
   display: none;
   flex-direction: column;
   align-items: flex-end;

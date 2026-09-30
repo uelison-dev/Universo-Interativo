@@ -2,7 +2,11 @@ import * as THREE from '../../node_modules/three/build/three.module.js';
 import { OrbitControls } from '../libs/three/controls/OrbitControls.js';
 import { createBlackHole, animateBlackHole } from '../../utils/black_hole.js';
 import { createSunSurfaceMaterial, createSunGlow } from '../../utils/sun_visual.js';
-import { createCometNucleusGeometry, addCometEffects } from '../../utils/comet_visual.js';
+import {
+  createCometNucleusGeometry,
+  addCometEffects,
+  getCometTailPresentation
+} from '../../utils/comet_visual.js';
 
 const { ipcRenderer } = window.require('electron');
 const stage = document.querySelector('.viewer-stage');
@@ -61,6 +65,7 @@ let inspectedBody = null;
 let inspectedOrbit = null;
 let inspectedSunMaterial = null;
 let inspectedCometUpdater = null;
+const inspectedWorldPosition = new THREE.Vector3();
 let previousTime = performance.now();
 
 scene.add(new THREE.AmbientLight(0x5f6d82, 0.12));
@@ -238,6 +243,7 @@ function animate(now) {
   if (blackHole) animateBlackHole(blackHole, camera, delta);
   if (inspectedBody) inspectedBody.rotation.y += delta * 0.18;
   if (inspectedSunMaterial?.uniforms?.time) inspectedSunMaterial.uniforms.time.value += delta;
+  controls.update();
   if (inspectedCometUpdater && inspectedBody) {
     const inverseRotation = inspectedBody.quaternion.clone().invert();
     const antiSolarDirection = keyLight.position
@@ -246,9 +252,23 @@ function animate(now) {
       .normalize()
       .applyQuaternion(inverseRotation);
     const orbitalVelocity = new THREE.Vector3(0, 1, 0).applyQuaternion(inverseRotation);
-    inspectedCometUpdater(antiSolarDirection, orbitalVelocity, now / 1000, 1);
+    inspectedBody.getWorldPosition(inspectedWorldPosition);
+    const tailPresentation = getCometTailPresentation(
+      inspectedWorldPosition,
+      camera,
+      stage.clientHeight,
+      13,
+      1
+    );
+    inspectedCometUpdater(
+      antiSolarDirection,
+      orbitalVelocity,
+      now / 1000,
+      1,
+      tailPresentation.scale,
+      tailPresentation.visible
+    );
   }
-  controls.update();
   renderer.render(scene, camera);
 }
 

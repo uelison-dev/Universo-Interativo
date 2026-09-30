@@ -1,5 +1,7 @@
 import * as THREE from '../node_modules/three/build/three.module.js';
 
+const cometProjectionScratch = new THREE.Vector3();
+
 export function createCometNucleusGeometry(radius = 0.5, segments = 48) {
   const geometry = new THREE.SphereGeometry(radius, segments, Math.max(24, segments >> 1));
   const source = geometry.attributes.position;
@@ -42,103 +44,132 @@ function createComaTexture() {
   return texture;
 }
 
-const TAIL_VERTEX_SHADER = `
-  uniform float uLength;
-  uniform float uWidth;
-  uniform float uCurve;
-  uniform float uFlutter;
-  uniform float uStart;
-  uniform float uTime;
-  varying vec2 vUv;
-
-  void main() {
-    vUv = uv;
-    float along = uv.y;
-    float side = uv.x * 2.0 - 1.0;
-    float widthShape = uWidth * (0.04 + 0.52 * sin(along * 1.5707963)) * (1.0 - 0.72 * along);
-    float curve = uCurve * along * along;
-    float flutter = sin(uTime * 1.3 + along * 8.0) * uFlutter * along * along;
-    vec3 localPosition = vec3(
-      side * widthShape + curve + flutter,
-      side * widthShape * 0.035,
-      uStart + along * uLength
-    );
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(localPosition, 1.0);
-  }
-`;
-
-const TAIL_FRAGMENT_SHADER = `
-  uniform vec3 uColor;
-  uniform vec3 uCoreColor;
-  uniform float uOpacity;
-  uniform float uTime;
-  uniform float uIon;
-  varying vec2 vUv;
-
-  void main() {
-    float along = vUv.y;
-    float side = abs(vUv.x * 2.0 - 1.0);
-    float softEdge = 1.0 - smoothstep(0.22, 1.0, side);
-    float headFade = smoothstep(0.0, 0.026, along);
-    float endFade = 1.0 - smoothstep(0.72, 1.0, along);
-    float centralGlow = exp(-side * (uIon > 0.5 ? 5.0 : 3.1));
-    float striation = 0.92 + 0.08 * sin(along * 92.0 - uTime * (uIon > 0.5 ? 1.7 : 0.55) + side * 8.0);
-    float density = (0.24 + centralGlow * 0.76) * striation;
-    vec3 color = mix(uColor, uCoreColor, centralGlow * 0.68 + (1.0 - along) * 0.22);
-    float halo = 0.72 + centralGlow * 1.6;
-    gl_FragColor = vec4(color * halo, softEdge * headFade * endFade * density * uOpacity);
-  }
-`;
-
-function createCometTail(radius, length, kind, colors) {
-  const segmentCount = 48;
+function createCometTail(radius, length, colors) {
+  const dustCount = 136;
+  const ionCount = 72;
+  const particleCount = dustCount + ionCount;
   const geometry = new THREE.BufferGeometry();
-  const vertices = new Float32Array((segmentCount + 1) * 2 * 3);
-  const uvs = new Float32Array((segmentCount + 1) * 2 * 2);
-  const indices = [];
+  const positions = new Float32Array(particleCount * 3);
+  const colorValues = new Float32Array(particleCount * 3);
+  const spread = new Float32Array(particleCount);
+  const seed = new Float32Array(particleCount);
+  const speed = new Float32Array(particleCount);
+  const ions = new Uint8Array(particleCount);
+  const coreColor = new THREE.Color(colors.core);
+  const dustColor = new THREE.Color(colors.dust);
+  const ionColor = new THREE.Color(colors.ion);
+  const start = radius * 1.08;
 
-  for (let segment = 0; segment <= segmentCount; segment += 1) {
-    const along = segment / segmentCount;
-    const vertex = segment * 2;
-    uvs[vertex * 2] = 0;
-    uvs[vertex * 2 + 1] = along;
-    uvs[(vertex + 1) * 2] = 1;
-    uvs[(vertex + 1) * 2 + 1] = along;
-    if (segment < segmentCount) {
-      indices.push(vertex, vertex + 1, vertex + 2, vertex + 1, vertex + 3, vertex + 2);
-    }
+  for (let index = 0; index < particleCount; index += 1) {
+    const isIon = index >= dustCount;
+    const streamLength = length * (isIon ? 1.22 : 1);
+    ions[index] = isIon ? 1 : 0;
+    const along = Math.random();
+    spread[index] = Math.random() * 2 - 1;
+    seed[index] = Math.random();
+    speed[index] = streamLength * (isIon ? 0.035 : 0.022) * (0.55 + seed[index] * 0.75);
+    positions[index * 3 + 2] = start + along * streamLength;
   }
+  geometry.setAttribute(
+    'position',
+    new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage)
+  );
+  geometry.setAttribute(
+    'color',
+    new THREE.BufferAttribute(colorValues, 3).setUsage(THREE.DynamicDrawUsage)
+  );
 
-  geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-  geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
-  geometry.setIndex(indices);
-
-  const isIon = kind === 'ion';
-  const uniforms = {
-    uLength: { value: length },
-    uWidth: { value: radius * (isIon ? 0.72 : 2.4) },
-    uCurve: { value: isIon ? 0 : -radius * 1.05 },
-    uFlutter: { value: isIon ? radius * 0.1 : radius * 0.025 },
-    uStart: { value: radius * 1.08 },
-    uColor: { value: new THREE.Color(isIon ? colors.ion : colors.dust) },
-    uCoreColor: { value: new THREE.Color(colors.core) },
-    uOpacity: { value: isIon ? 0.76 : 0.62 },
-    uTime: { value: 0 },
-    uIon: { value: isIon ? 1 : 0 }
-  };
-  const material = new THREE.ShaderMaterial({
-    uniforms,
-    vertexShader: TAIL_VERTEX_SHADER,
-    fragmentShader: TAIL_FRAGMENT_SHADER,
+  const material = new THREE.PointsMaterial({
+    vertexColors: true,
+    size: 1.65,
+    sizeAttenuation: false,
     transparent: true,
+    opacity: 0.8,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
-    side: THREE.DoubleSide,
     toneMapped: false
   });
-  const tail = new THREE.Mesh(geometry, material);
+  const tail = new THREE.Points(geometry, material);
   tail.frustumCulled = false;
-  return { tail, uniforms, length, kind };
+  return {
+    tail,
+    material,
+    geometry,
+    positions,
+    colorValues,
+    spread,
+    seed,
+    speed,
+    ions,
+    particleCount,
+    length,
+    radius,
+    coreColor,
+    dustColor,
+    ionColor,
+    start
+  };
+}
+
+function advanceTailParticles(tail, elapsed, delta, activity) {
+  const positions = tail.positions;
+  const colors = tail.colorValues;
+
+  tail.material.opacity = 0.8 * (0.24 + activity * 0.76);
+  for (let index = 0; index < tail.particleCount; index += 1) {
+    const offset = index * 3;
+    const isIon = tail.ions[index] === 1;
+    const activeLength = tail.length * (isIon ? 1.22 : 1) * (0.48 + activity * 0.92);
+    let z = positions[offset + 2] + tail.speed[index] * delta;
+    const end = tail.start + activeLength;
+    if (z >= end) z = tail.start + ((z - tail.start) % activeLength);
+    const progress = THREE.MathUtils.clamp((z - tail.start) / activeLength, 0, 1);
+    const width = tail.radius * (isIon ? 0.62 : 1.75) * (0.1 + progress * 0.8);
+    const flutter =
+      Math.sin(elapsed * 0.7 + tail.seed[index] * 19) * tail.radius * 0.055 * progress;
+    const drift = Math.sin(elapsed * 0.32 + tail.seed[index] * 31) * width * 0.04 * progress;
+
+    positions[offset] =
+      tail.spread[index] * width +
+      (isIon ? 0 : -tail.radius * 0.72 * progress * progress) +
+      flutter +
+      drift;
+    positions[offset + 1] = Math.sin(tail.seed[index] * 53) * width * 0.025;
+    positions[offset + 2] = z;
+
+    const headMix = (1 - progress) * 0.38;
+    const brightness = 1 - progress * 0.84;
+    const tailColor = isIon ? tail.ionColor : tail.dustColor;
+    colors[offset] = (tailColor.r * (1 - headMix) + tail.coreColor.r * headMix) * brightness;
+    colors[offset + 1] = (tailColor.g * (1 - headMix) + tail.coreColor.g * headMix) * brightness;
+    colors[offset + 2] = (tailColor.b * (1 - headMix) + tail.coreColor.b * headMix) * brightness;
+  }
+
+  tail.geometry.attributes.position.needsUpdate = true;
+  tail.geometry.attributes.color.needsUpdate = true;
+}
+
+// Mantém a cauda dimensionada para a tela: grande o bastante perto, mas sem
+// cobrir a cena quando a câmera chega ao núcleo. A projeção também evita
+// desenhar caudas imperceptíveis ou muito fora do enquadramento.
+export function getCometTailPresentation(
+  worldPosition,
+  camera,
+  viewportHeight,
+  tailLength,
+  activity = 1
+) {
+  camera.updateMatrixWorld();
+  const distance = Math.max(camera.position.distanceTo(worldPosition), camera.near);
+  const focalPixels = viewportHeight / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
+  const projectedLength = (tailLength * 1.22 * (0.48 + activity * 0.92) * focalPixels) / distance;
+  const ndc = cometProjectionScratch.copy(worldPosition).project(camera);
+  const inView = ndc.z >= -1 && ndc.z <= 1 && Math.abs(ndc.x) < 1.4 && Math.abs(ndc.y) < 1.4;
+  const maxPixels = Math.min(viewportHeight * 0.14, 150);
+  return {
+    scale: Math.min(1, maxPixels / Math.max(projectedLength, 1)),
+    visible: inView && projectedLength >= 3
+  };
 }
 
 export function addCometEffects(
@@ -167,19 +198,28 @@ export function addCometEffects(
 
   const tailFrame = new THREE.Group();
   nucleus.add(tailFrame);
-  const dustTail = createCometTail(radius, tailLength, 'dust', colors);
-  const ionTail = createCometTail(radius, tailLength * 1.22, 'ion', colors);
-  dustTail.tail.renderOrder = 1;
-  ionTail.tail.renderOrder = 1;
-  tailFrame.add(dustTail.tail, ionTail.tail);
+  const cometTail = createCometTail(radius, tailLength, colors);
+  cometTail.tail.renderOrder = 1;
+  tailFrame.add(cometTail.tail);
 
   const tangent = new THREE.Vector3(0, 1, 0);
   const antiSolar = new THREE.Vector3(0, 0, 1);
   const binormal = new THREE.Vector3();
   const basis = new THREE.Matrix4();
   const orientation = new THREE.Quaternion();
+  let previousElapsed = null;
 
-  return (antiSolarDirection, orbitalVelocity, elapsed, activity = 1) => {
+  return (
+    antiSolarDirection,
+    orbitalVelocity,
+    elapsed,
+    activity = 1,
+    viewScale = 1,
+    visible = true
+  ) => {
+    const delta =
+      previousElapsed === null ? 0 : THREE.MathUtils.clamp(elapsed - previousElapsed, 0, 0.05);
+    previousElapsed = elapsed;
     antiSolar.copy(antiSolarDirection).normalize();
     tangent.copy(orbitalVelocity).addScaledVector(antiSolar, -orbitalVelocity.dot(antiSolar));
     if (tangent.lengthSq() < 1e-6) tangent.set(0, 1, 0);
@@ -189,13 +229,13 @@ export function addCometEffects(
     basis.makeBasis(tangent, binormal, antiSolar);
     orientation.setFromRotationMatrix(basis);
     tailFrame.quaternion.copy(orientation);
+    const tailScale = THREE.MathUtils.clamp(viewScale, 0.001, 1);
+    tailFrame.visible = visible;
+    tailFrame.scale.setScalar(tailScale);
+    tailFrame.position.copy(antiSolar).multiplyScalar(radius * 1.08 * (1 - tailScale));
 
     const normalizedActivity = THREE.MathUtils.clamp(activity, 0.12, 1);
-    [dustTail, ionTail].forEach(({ uniforms, length, kind }) => {
-      uniforms.uLength.value = length * (0.48 + normalizedActivity * 0.92);
-      uniforms.uOpacity.value = (kind === 'ion' ? 0.76 : 0.62) * (0.24 + normalizedActivity * 0.76);
-      uniforms.uTime.value = elapsed;
-    });
+    if (visible) advanceTailParticles(cometTail, elapsed, delta, normalizedActivity);
     coma.material.opacity = 0.3 + normalizedActivity * 0.48;
     const comaSize = radius * (4.8 + normalizedActivity * 2.3);
     coma.scale.set(comaSize, comaSize, 1);

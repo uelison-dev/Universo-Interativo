@@ -1,6 +1,10 @@
 # 🌌 Universo Interativo — Versão Beta
 
 <p align="center">
+  <img src="logo_atom.png" alt="Logo e ícone do Universo Interativo" width="180" />
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Tecnologia-Three.js-blue?style=for-the-badge&logo=threedots&logoColor=white" />
   <img src="https://img.shields.io/badge/Linguagem-JavaScript%20(ES6)-yellow?style=for-the-badge&logo=javascript" />
   <img src="https://img.shields.io/badge/Modelo%20de%20Luz-Físico%20(AM0)-brightgreen?style=for-the-badge" />
@@ -175,6 +179,6 @@ GitHub: https://github.com/uelison-dev
 
 ---
 
-**Versão atual:** 6.39.0 — consulte o [histórico de alterações](CHANGELOG.md) e a [política de versionamento](VERSIONING.md).
+**Versão atual:** 6.39.14 — consulte o [histórico de alterações](CHANGELOG.md) e a [política de versionamento](VERSIONING.md).
 
 © 2026 Uelison Ferreira. Todos os direitos reservados.

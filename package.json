@@ -1,6 +1,6 @@
 {
   "name": "sistema-solar-interativo",
-  "version": "6.39.0",
+  "version": "6.39.14",
   "description": "<p align=\"center\">\r   <img src=\"https://img.shields.io/badge/Tecnologia-Three.js-blue?style=for-the-badge&logo=threedots&logoColor=white\" />\r   <img src=\"https://img.shields.io/badge/Linguagem-JavaScript%20(ES6)-yellow?style=for-the-badge&logo=javascript\" />\r   <img src=\"https://img.shields.io/badge/Modelo%20de%20Luz-Físico%20(AM0)-brightgreen?style=for-the-badge\" />\r </p>",
   "main": "main.js",
   "scripts": {
@@ -28,6 +28,7 @@
   "build": {
     "appId": "com.vuenar.universointerativo",
     "productName": "Universo Interativo",
+    "afterPack": "scripts/embed-windows-icon.js",
     "directories": {
       "output": "dist"
     },
@@ -36,6 +37,7 @@
       "preload.js",
       "package.json",
       "logo_atom.png",
+      "logo_atom.ico",
       "logo_estacio.png",
       "public/**/*",
       "src/**/*",
@@ -51,6 +53,7 @@
     ],
     "asar": true,
     "win": {
+      "icon": "logo_atom.ico",
       "signAndEditExecutable": false,
       "target": [
         {
@@ -69,9 +72,14 @@
       "artifactName": "Universo-Interativo-${version}-${arch}.${ext}"
     },
     "nsis": {
+      "artifactName": "Universo-Interativo-Setup-${version}-${arch}.${ext}",
+      "include": "build/installer.nsh",
+      "installerIcon": "logo_atom.ico",
+      "uninstallerIcon": "logo_atom.ico",
+      "installerHeaderIcon": "logo_atom.ico",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
+      "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
       "shortcutName": "Universo Interativo"
     }

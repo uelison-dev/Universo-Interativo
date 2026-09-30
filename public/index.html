@@ -81,8 +81,13 @@
 
     <div id="controls-container">
       <div class="tooltip-container">
-        <span class="tooltip-text">Visibilidade</span>
-        <button id="visibility-btn" class="square-button" aria-label="Controle de Visibilidade">
+        <span class="tooltip-text">Órbitas e camadas</span>
+        <button
+          id="visibility-btn"
+          class="square-button"
+          aria-label="Órbitas e camadas"
+          title="Órbitas e camadas"
+        >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
             <circle cx="12" cy="12" r="3" />
@@ -91,11 +96,12 @@
       </div>
 
       <div class="tooltip-container">
-        <span class="tooltip-text">Avançar tempo</span
+        <span class="tooltip-text">Simulação temporal</span
         ><button
           id="time-controls-btn"
           class="square-button"
-          aria-label="Abrir controle de tempo"
+          aria-label="Abrir simulação temporal"
+          title="Simulação temporal"
           aria-expanded="false"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -108,33 +114,38 @@
         <label class="checkbox-container">
           <input type="checkbox" id="toggle-planets-orbits" />
           <span class="checkmark"></span>
-          Órbita - Planetas
+          Órbitas planetárias
         </label>
         <label class="checkbox-container">
           <input type="checkbox" id="toggle-satellites-orbits" />
           <span class="checkmark"></span>
-          Órbita - Satélites
+          Órbitas de satélites
         </label>
         <label class="checkbox-container">
           <input type="checkbox" id="toggle-major-tnos-orbits" />
           <span class="checkmark"></span>
-          Órbita - Planetas-Anões
+          Órbitas de planetas anões
         </label>
         <label class="checkbox-container">
           <input type="checkbox" id="toggle-tnos-orbits" />
           <span class="checkmark"></span>
-          Órbita - TNOs
+          Órbitas de objetos transnetunianos (TNOs)
         </label>
         <label class="checkbox-container">
           <input type="checkbox" id="toggle-comets-orbits" />
           <span class="checkmark"></span>
-          Órbita - Cometas
+          Órbitas de cometas
         </label>
       </div>
 
       <div class="tooltip-container">
-        <span class="tooltip-text">Controle de Áudio</span>
-        <button id="reopen-audio-btn" class="square-button" aria-label="Controle de Áudio">
+        <span class="tooltip-text">Trilha sonora</span>
+        <button
+          id="reopen-audio-btn"
+          class="square-button"
+          aria-label="Trilha sonora"
+          title="Trilha sonora"
+        >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path
               d="M9 18V5l12-2v13M9 18c0 1.7-1.6 3-3.5 3S2 20.8 2 19s1.6-3 3.5-3S9 16.3 9 18Zm12-2c0 1.7-1.6 3-3.5 3S14 17.8 14 16s1.6-3 3.5-3 3.5 1.3 3.5 3Z"
@@ -144,11 +155,12 @@
       </div>
 
       <div class="tooltip-container">
-        <span class="tooltip-text">Informações</span>
+        <span class="tooltip-text">Ajuda e navegação</span>
         <button
           id="info-btn"
           class="square-button nav-toggle-btn"
-          aria-label="Informações e Navegação"
+          aria-label="Ajuda e navegação"
+          title="Ajuda e navegação"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="12" r="9" />
@@ -157,12 +169,12 @@
         </button>
       </div>
       <div class="tooltip-container">
-        <span class="tooltip-text">Mais informações do objeto</span>
+        <span class="tooltip-text">Inspeção detalhada</span>
         <button
           id="dedicated-viewer-btn"
           class="square-button"
-          aria-label="Abrir visualização detalhada do objeto selecionado"
-          title="Abrir visualização detalhada"
+          aria-label="Abrir inspeção detalhada do objeto selecionado"
+          title="Inspeção detalhada"
           disabled
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -314,8 +326,8 @@
           id="zoom-out-btn"
           class="square-button zoom-button"
           type="button"
-          aria-label="Afastar"
-          title="Afastar"
+          aria-label="Zoom Out — afastar a câmera"
+          title="Zoom Out — afastar"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="10.8" cy="10.8" r="6.8" />
@@ -326,8 +338,8 @@
           id="zoom-in-btn"
           class="square-button zoom-button"
           type="button"
-          aria-label="Aproximar"
-          title="Aproximar"
+          aria-label="Zoom In — aproximar a câmera"
+          title="Zoom In — aproximar"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="10.8" cy="10.8" r="6.8" />
@@ -338,7 +350,8 @@
       <button
         id="toggle-camera-btn"
         class="square-button zoom-button"
-        aria-label="Alternar Câmera Livre"
+        aria-label="Navegação livre"
+        title="Navegação livre"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path
