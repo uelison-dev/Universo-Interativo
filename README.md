@@ -179,6 +179,6 @@ GitHub: https://github.com/uelison-dev
 
 ---
 
-**Versão atual:** 6.39.14 — consulte o [histórico de alterações](CHANGELOG.md) e a [política de versionamento](VERSIONING.md).
+**Versão atual:** 6.39.16 — consulte o [histórico de alterações](CHANGELOG.md) e a [política de versionamento](VERSIONING.md).
 
 © 2026 Uelison Ferreira. Todos os direitos reservados.

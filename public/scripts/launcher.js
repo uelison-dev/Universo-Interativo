@@ -16,6 +16,23 @@ const projectHighlights = [
 
 const patchNotes = [
   {
+    version: '6.39.16',
+    category: 'Identidade visual',
+    title: 'Logomarca sem fundo nos ícones do Windows',
+    changes: [
+      'O ícone agora usa a nova logomarca com transparência, sem placa arredondada ou contorno.'
+    ]
+  },
+  {
+    version: '6.39.15',
+    category: 'Identidade visual e distribuição',
+    title: 'Nova logo aplicada ao aplicativo',
+    changes: [
+      'A nova marca aparece no launcher, nas janelas, nos favicons e nos atalhos do Windows.',
+      'O ícone multirresolução do executável e do instalador foi atualizado.'
+    ]
+  },
+  {
     version: '6.39.14',
     category: 'Documentação e identidade visual',
     title: 'Ícone do projeto apresentado no README',

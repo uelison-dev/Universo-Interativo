@@ -1,5 +1,16 @@
 # Histórico de alterações
 
+## 6.39.16 — 2026-09-30
+
+- Ícone do Windows atualizado para usar somente a nova logomarca, com transparência e sem fundo, cantos ou contorno adicionados.
+- Distribuição Windows regenerada com o ícone transparente atualizado.
+
+## 6.39.15 — 2026-09-30
+
+- Nova logo aplicada ao launcher, aos favicons, às janelas e aos atalhos do aplicativo.
+- Ícone `.ico` multirresolução regenerado a partir da nova marca, preservando a borda cinza-clara arredondada para o Windows.
+- README continua exibindo a logo atual; nova distribuição Windows gerada com a identidade atualizada.
+
 ## 6.39.14 — 2026-09-30
 
 - README passa a exibir a identidade visual oficial do aplicativo para apresentar o ícone do projeto aos visitantes.
