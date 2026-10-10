@@ -662,10 +662,14 @@ body {
   position: fixed;
   right: calc(20px + var(--control-size) + 14px);
   bottom: calc(20px + (var(--control-size) * 2) + (var(--control-gap) * 2) - 2px);
-  width: 236px;
-  padding: 38px 16px 14px;
+  width: 292px;
+  max-width: calc(100vw - var(--control-size) - 78px);
+  max-height: min(72vh, 560px);
+  padding: 40px 12px 12px;
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
   opacity: 0;
   visibility: hidden;
   transform: translateX(10px) scale(0.98);
@@ -690,7 +694,7 @@ body {
 }
 
 #visibility-menu::before {
-  content: 'ÓRBITAS E CAMADAS';
+  content: 'VISIBILIDADE DA CENA';
   position: absolute;
   top: 14px;
   left: 16px;
@@ -702,14 +706,18 @@ body {
 
 #visibility-menu label {
   margin: 0;
-  padding: 10px 8px;
-  display: flex;
+  min-height: 44px;
+  padding: 6px 8px;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  column-gap: 10px;
   align-items: center;
   cursor: pointer;
-  font-size: 0.82em;
+  font-size: 0.78rem;
   font-weight: 600;
+  line-height: 1.2;
   color: var(--ui-text-soft);
-  border-radius: 8px;
+  border-radius: 6px;
   transition:
     color 0.2s ease,
     background-color 0.2s ease;
@@ -729,11 +737,11 @@ body {
 }
 
 .checkmark {
+  box-sizing: border-box;
   height: 18px;
   width: 18px;
   background: rgba(27, 30, 36, 0.96);
-  border-radius: 5px;
-  margin-right: 12px;
+  border-radius: 4px;
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.12);
   transition:

@@ -275,7 +275,12 @@ function getViewerSatellites(data) {
   if (data?.isPlanet) {
     return moonData
       .filter((moon) => moon.parentPlanet === data.name)
-      .map((moon) => ({ ...moon, isMoon: true, type: 'Satélite Natural' }));
+      .map((moon) => ({
+        ...moon,
+        isMoon: true,
+        parentName: data.name,
+        type: 'Satélite Natural'
+      }));
   }
 
   if (data?.isMajorTNO) {
@@ -283,6 +288,7 @@ function getViewerSatellites(data) {
     return (catalogEntry?.satellites || []).map((satellite) => ({
       ...satellite,
       isMoonOfTNO: true,
+      parentName: data.name,
       type: 'Satélite de planeta anão'
     }));
   }
@@ -290,19 +296,26 @@ function getViewerSatellites(data) {
   return [];
 }
 
-function openObjectViewer(data) {
-  const isInspectableObject =
-    data?.isBlackHole ||
-    data?.isSun ||
-    data?.isPlanet ||
-    data?.isMoon ||
-    data?.isMoonOfTNO ||
-    data?.isMajorTNO ||
-    data?.isTNO ||
-    data?.isComet;
-  if (!electronIpc || !isInspectableObject) return;
+function getViewerParentObject(data) {
+  if (data?.isMoon) {
+    const parentPlanet = celestialData.find((planet) => planet.name === data.parentPlanet);
+    if (parentPlanet) return { ...parentPlanet, isPlanet: true };
 
-  electronIpc.invoke('black-hole:open', {
+    const parentTNO = majorTNOData.find((tno) => tno.name === data.parentPlanet);
+    if (parentTNO) return { ...parentTNO, isMajorTNO: true };
+  }
+
+  if (data?.isMoonOfTNO) {
+    const parentName = data.parentName || data.parentTNOName || data.parent?.userData?.name;
+    const parentTNO = majorTNOData.find((tno) => tno.name === parentName);
+    if (parentTNO) return { ...parentTNO, isMajorTNO: true };
+  }
+
+  return null;
+}
+
+function createViewerPayload(data, includeParent = true) {
+  const payload = {
     mode: data.isBlackHole ? 'black-hole' : 'celestial-body',
     isSun: data.isSun,
     name: data.name || data.Nome || data['Designação provisória'],
@@ -325,7 +338,29 @@ function openObjectViewer(data) {
     isGalacticCenter: data.isGalacticCenter,
     info: data.info,
     satellites: getViewerSatellites(data)
-  });
+  };
+
+  if (includeParent) {
+    const parentObject = getViewerParentObject(data);
+    if (parentObject) payload.parentObject = createViewerPayload(parentObject, false);
+  }
+
+  return payload;
+}
+
+function openObjectViewer(data) {
+  const isInspectableObject =
+    data?.isBlackHole ||
+    data?.isSun ||
+    data?.isPlanet ||
+    data?.isMoon ||
+    data?.isMoonOfTNO ||
+    data?.isMajorTNO ||
+    data?.isTNO ||
+    data?.isComet;
+  if (!electronIpc || !isInspectableObject) return;
+
+  electronIpc.invoke('black-hole:open', createViewerPayload(data));
 }
 
 // --- Adicionado: Handlers de Erro para Debug de Texturas ---
@@ -683,7 +718,12 @@ function createMajorTNOs() {
         const satelliteMaterial = new THREE.MeshStandardMaterial({ map: satelliteTexture });
         const satellite = new THREE.Mesh(satelliteGeometry, satelliteMaterial);
 
-        satellite.userData = { ...satelliteData, isMoonOfTNO: true, parent: tno };
+        satellite.userData = {
+          ...satelliteData,
+          isMoonOfTNO: true,
+          parentName: data.name,
+          parent: tno
+        };
 
         const satelliteOrbitGroup = new THREE.Group();
         orbitGroup.add(satelliteOrbitGroup);
@@ -1088,9 +1128,24 @@ function createGalaxyBackground() {
   scene.add(galaxyBackground);
 }
 
+let kuiperBeltCreated = false;
+
 function createKuiperBelt() {
+  if (kuiperBeltCreated) return;
+  kuiperBeltCreated = true;
+  const geometry = new THREE.SphereGeometry(2, 4, 4);
+  const texture = textureLoader.load('assets/textures/kuiper_texture.jpg');
+  const material = new THREE.MeshStandardMaterial({
+    map: texture,
+    emissiveMap: texture,
+    emissive: new THREE.Color(0x77716a),
+    emissiveIntensity: 0.3,
+    roughness: 0.9,
+    metalness: 0.0
+  });
+
   for (let i = 0; i < kuiperBeltCount; i++) {
-    const tno = new THREE.Mesh(kuiperGeometry, kuiperMaterial);
+    const tno = new THREE.Mesh(geometry, material);
     const angle = Math.random() * Math.PI * 2;
     const radius = kuiperMinRadius + Math.random() * (kuiperMaxRadius - kuiperMinRadius);
 
@@ -1111,32 +1166,39 @@ function createKuiperBelt() {
 const asteroidCount = 2800;
 const asteroidMinRadius = 300;
 const asteroidMaxRadius = 400;
-const asteroidGeometry = new THREE.SphereGeometry(0.2, 8, 8);
-const asteroidBaseTexture = textureLoader.load('assets/textures/asteroid_texture.jpg'); // Corrigido
-const asteroidMaterial = new THREE.MeshStandardMaterial({
-  map: asteroidBaseTexture,
-  emissiveMap: asteroidBaseTexture,
-  emissive: new THREE.Color(0x9a7850),
-  emissiveIntensity: 0.72,
-  roughness: 0.8,
-  metalness: 0.0
-});
-
 const asteroidGroup = new THREE.Group();
+asteroidGroup.visible = false;
 scene.add(asteroidGroup);
+let asteroidBeltCreated = false;
 
-for (let i = 0; i < asteroidCount; i++) {
-  const asteroid = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
-  const angle = Math.random() * Math.PI * 2;
-  const radius = asteroidMinRadius + Math.random() * (asteroidMaxRadius - asteroidMinRadius);
-  const x = Math.cos(angle) * radius;
-  const z = Math.sin(angle) * radius;
-  const y = (Math.random() - 0.5) * 4;
-  asteroid.position.set(x, y, z);
-  asteroid.rotation.x = Math.random() * Math.PI;
-  asteroid.rotation.y = Math.random() * Math.PI;
-  asteroid.rotation.z = Math.random() * Math.PI;
-  asteroidGroup.add(asteroid);
+function createAsteroidBelt() {
+  if (asteroidBeltCreated) return;
+  asteroidBeltCreated = true;
+
+  const geometry = new THREE.SphereGeometry(0.2, 8, 8);
+  const texture = textureLoader.load('assets/textures/asteroid_texture.jpg');
+  const material = new THREE.MeshStandardMaterial({
+    map: texture,
+    emissiveMap: texture,
+    emissive: new THREE.Color(0x9a7850),
+    emissiveIntensity: 0.72,
+    roughness: 0.8,
+    metalness: 0.0
+  });
+
+  for (let i = 0; i < asteroidCount; i++) {
+    const asteroid = new THREE.Mesh(geometry, material);
+    const angle = Math.random() * Math.PI * 2;
+    const radius = asteroidMinRadius + Math.random() * (asteroidMaxRadius - asteroidMinRadius);
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius;
+    const y = (Math.random() - 0.5) * 4;
+    asteroid.position.set(x, y, z);
+    asteroid.rotation.x = Math.random() * Math.PI;
+    asteroid.rotation.y = Math.random() * Math.PI;
+    asteroid.rotation.z = Math.random() * Math.PI;
+    asteroidGroup.add(asteroid);
+  }
 }
 
 const kuiperBeltCount = 8000;
@@ -1153,7 +1215,30 @@ const kuiperMaterial = new THREE.MeshStandardMaterial({
   metalness: 0.0
 });
 const kuiperGroup = new THREE.Group();
+kuiperGroup.visible = false;
 scene.add(kuiperGroup);
+
+let asteroidBeltEnabled = false;
+let kuiperBeltEnabled = false;
+let beltVisibilityByScale = 1;
+
+function updateBeltVisibility() {
+  const inSolarSystemRange = beltVisibilityByScale > 0.05;
+  asteroidGroup.visible = asteroidBeltEnabled && inSolarSystemRange;
+  kuiperGroup.visible = kuiperBeltEnabled && inSolarSystemRange;
+}
+
+function setAsteroidBeltVisible(visible) {
+  asteroidBeltEnabled = visible;
+  if (visible) createAsteroidBelt();
+  updateBeltVisibility();
+}
+
+function setKuiperBeltVisible(visible) {
+  kuiperBeltEnabled = visible;
+  if (visible) createKuiperBelt();
+  updateBeltVisibility();
+}
 
 createDistantSun(); // Chama a nova funÃ§Ã£o simplificada
 createPlanets();
@@ -1164,8 +1249,6 @@ createMajorTNOs(); // CORRIGIDO: Agora tem a lÃ³gica de cÃ¡lculo elÃ­ptico
 createBlackHoles(); // NOVO: Chama a criaÃ§Ã£o dos buracos negros
 setupBackground(); // Chamada para configurar o background
 createGalaxyBackground(); // Chamada para o novo fundo plano da galÃ¡xia
-createKuiperBelt(); // Chamada para criar o cinturÃ£o de Kuiper
-
 // Adicionado: Event listener para a roda do mouse para zoom
 window.addEventListener('wheel', onMouseWheel, false);
 document.addEventListener('keydown', onKeyDown, false);
@@ -2314,8 +2397,8 @@ function updateInterstellarTransition() {
     majorTNOs.forEach((tno) => (tno.tno.visible = true));
     tnos.forEach((tno) => (tno.tno.visible = true));
     comets.forEach((c) => (c.comet.visible = true));
-    asteroidGroup.visible = true;
-    kuiperGroup.visible = true;
+    beltVisibilityByScale = 1;
+    updateBeltVisibility();
     // NOVO: Esconde Buracos Negros
     blackHoles.forEach((bh) => (bh.bhMesh.visible = false));
 
@@ -2370,8 +2453,8 @@ function updateInterstellarTransition() {
         m.moon.material.opacity = opacityPlanets;
       }
     });
-    asteroidGroup.visible = opacityPlanets > 0.05;
-    kuiperGroup.visible = opacityPlanets > 0.05;
+    beltVisibilityByScale = opacityPlanets;
+    updateBeltVisibility();
 
     // Aplica opacidade para TNOs e Cometas
     majorTNOs.forEach((tno) => {
@@ -2416,8 +2499,8 @@ function updateInterstellarTransition() {
     majorTNOs.forEach((tno) => (tno.tno.visible = false));
     tnos.forEach((tno) => (tno.tno.visible = false));
     comets.forEach((c) => (c.comet.visible = false));
-    asteroidGroup.visible = false;
-    kuiperGroup.visible = false;
+    beltVisibilityByScale = 0;
+    updateBeltVisibility();
 
     // NOVO: Buracos Negros ficam visÃ­veis
     blackHoles.forEach((bh) => (bh.bhMesh.visible = true));
@@ -2647,7 +2730,7 @@ function animate() {
       updateCometLabel(c);
     });
 
-    asteroidGroup.rotation.y += 0.0001;
+    if (asteroidGroup.visible) asteroidGroup.rotation.y += 0.0001;
 
     if (frameCounter % CHECK_INTERVAL === 0) {
       planets.forEach((p) => {
@@ -2845,7 +2928,8 @@ initializeControlPanels({
   majorTNOs,
   tnos,
   comets,
-  kuiperGroup
+  setAsteroidBeltVisible,
+  setKuiperBeltVisible
 });
 const timeControlsButton = document.getElementById('time-controls-btn');
 const timeControlPanel = document.getElementById('time-control-panel');

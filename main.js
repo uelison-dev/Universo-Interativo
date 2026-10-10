@@ -9,6 +9,7 @@ if (typeof electron === 'string') {
 }
 
 const { app, BrowserWindow, ipcMain } = electron;
+const { getActiveSatelliteCatalog } = require('./src/data/artificial_satellite_cache');
 const applicationIcon = path.join(
   __dirname,
   process.platform === 'win32' ? 'logo_atom.ico' : 'logo_atom.png'
@@ -150,6 +151,8 @@ app.whenReady().then(() => {
   ipcMain.on('black-hole:close', () => {
     blackHoleWindow?.close();
   });
+
+  ipcMain.handle('satellites:active:get', () => getActiveSatelliteCatalog(app.getPath('userData')));
 
   createLauncherWindow();
 

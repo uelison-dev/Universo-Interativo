@@ -1,5 +1,55 @@
 # Histórico de alterações
 
+## 6.39.25 — 2026-10-08
+
+- Esferas de satélite reduzidas; a esfera selecionada mantém destaque dourado com halo mais contido.
+
+## 6.39.24 — 2026-10-07
+
+- Satélites artificiais na inspeção dedicada agora são esferas instanciadas; hover mantém o nome e a seleção amplia e destaca a esfera em dourado.
+- Opções de visibilidade da cena receberam largura responsiva, caixas alinhadas e linhas de tamanho uniforme.
+
+## 6.39.23 — 2026-10-06
+
+- Legenda da camada terrestre mostra a quantidade total de satélites propagáveis recebidos no catálogo.
+
+## 6.39.22 — 2026-10-06
+
+- Legenda Starlink substitui rótulos de shell da referência por agrupamentos próprios de altitude nominal e inclinação derivados do OMM ACTIVE.
+- Classes LEO e polar seguem critérios publicados pela ESA; SSO não é inferido apenas pela inclinação.
+- Créditos e limites metodológicos das fontes orbitais foram registrados em `THIRD-PARTY-NOTICES.md`.
+
+## 6.39.21 — 2026-10-06
+
+- Órbitas usam o período corrigido pelo SGP4 e um referencial terrestre fixo no instante da inspeção, em vez do ground track rotativo.
+- Amostras inválidas deixam de ser ligadas à origem; cores agora são aplicadas às categorias efetivamente calculadas.
+- Altitude orbital usa unidades consistentes e a classificação Starlink considera inclinação, altitude e época de lançamento do OMM.
+
+## 6.39.20 — 2026-10-06
+
+- Corrigida a seleção de satélites, que interrompia a animação ao tentar reposicionar o marcador por um índice inexistente.
+- Hover mostra o nome do satélite; seleção por raycast considera a oclusão da Terra e evita projetar cada ponto manualmente.
+- Pontos, marcador e órbita usam as cores das nove categorias da legenda Starlink; categorias são estimadas pela inclinação e altitude orbital.
+
+## 6.39.19 — 2026-10-06
+
+- Inspeção dedicada da Terra passa a oferecer uma camada opcional de satélites artificiais do grupo ACTIVE do CelesTrak.
+- Elementos orbitais OMM em JSON são armazenados em cache na pasta de dados do usuário e reutilizados quando a rede não está disponível.
+- Posições são propagadas com SGP4 em um Web Worker; selecionar um satélite destaca sua órbita e mostra nome, NORAD ID e dados orbitais.
+- Satélites artificiais ficam separados dos satélites naturais e não são adicionados à cena principal.
+
+## 6.39.18 — 2026-10-06
+
+- Adicionadas caixas de seleção independentes para exibir o cinturão de asteroides e o cinturão de Kuiper.
+- Os dois cinturões iniciam ocultos e seus milhares de objetos só são criados quando ativados, reduzindo o trabalho inicial da cena.
+- A visibilidade dos cinturões deixou de ficar vinculada à opção de órbitas de TNOs.
+
+## 6.39.17 — 2026-10-06
+
+- Inspeção dedicada de satélites agora oferece retorno direto ao planeta ou TNO hospedeiro.
+- Relação com o objeto principal é preservada ao abrir o satélite na cena ou selecioná-lo na lista da inspeção.
+- Botão de retorno contextual mantém a ação “Voltar para a galáxia” separada.
+
 ## 6.39.16 — 2026-09-30
 
 - Ícone do Windows atualizado para usar somente a nova logomarca, com transparência e sem fundo, cantos ou contorno adicionados.

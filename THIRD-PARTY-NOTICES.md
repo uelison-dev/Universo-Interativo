@@ -77,6 +77,7 @@ Esses componentes permanecem sujeitos às suas respectivas licenças e termos de
 Entre os componentes utilizados no projeto estão, conforme aplicável:
 
 - **Three.js**
+- **satellite.js** — propagação orbital SGP4/SDP4 a partir de elementos TLE/OMM; licença MIT.
 - **Electron**
 - **Express**
 - **Solar System Scope — Solar Textures**
@@ -85,6 +86,10 @@ Entre os componentes utilizados no projeto estão, conforme aplicável:
 As licenças e termos específicos de cada dependência devem ser considerados separadamente.
 
 Para bibliotecas e pacotes instalados por meio do npm, consulte também o `package.json`, o `package-lock.json` e os respectivos arquivos de licença distribuídos com cada dependência.
+
+### Dados orbitais
+
+Quando a camada de satélites artificiais é ativada na inspeção dedicada da Terra, o aplicativo consulta os elementos GP/OMM do grupo ACTIVE publicados pelo [CelesTrak](https://celestrak.org/NORAD/elements/). A coleta é armazenada em cache local e segue a [política de uso do CelesTrak](https://celestrak.org/usage-policy.php). As posições exibidas são cálculos estimados a partir dos elementos orbitais, não telemetria em tempo real.
 
 ---
 
@@ -132,6 +137,28 @@ https://gemini.google.com/
 **Google Gemini — Informações sobre geração de imagens**
 
 https://support.google.com/gemini/answer/14286560
+
+---
+
+## 7. Fontes orbitais e critérios de classificação
+
+### Dados de entrada
+
+Os elementos Orbit Mean-Elements Message (OMM) usados na camada são publicados pelo [CelesTrak](https://celestrak.org/NORAD/elements/). O formato e os campos GP/OMM estão descritos na [documentação GP/OMM do CelesTrak](https://celestrak.org/NORAD/documentation/gp-data-formats.php), e a coleta segue a [política de uso do CelesTrak](https://celestrak.org/usage-policy.php). O OMM não fornece um rótulo oficial de geração ou shell para cada Starlink.
+
+### Referências científicas
+
+- A [Agência Espacial Europeia (ESA), Types of orbits](https://www.esa.int/Enabling_Support/Space_Transportation/Types_of_orbits), descreve LEO como órbita abaixo de 2.000 km e apresenta órbitas polares tipicamente entre 200 e 1.000 km, admitindo desvio de até 10° dos polos.
+- A [NASA Earth Observatory, Catalog of Earth Satellite Orbits](https://science.nasa.gov/earth/earth-observatory/catalog-of-earth-satellite-orbits/), descreve altitude, excentricidade e inclinação como parâmetros que determinam a geometria orbital e define a inclinação em relação ao equador.
+- A estimativa de altitude nominal por movimento médio usa o modelo SGP4 e as constantes WGS-72 fornecidas por [satellite.js](https://github.com/shashwatak/satellite-js), dependência licenciada sob MIT.
+
+### Método e limites
+
+Para uma órbita aproximadamente circular, a altitude nominal é estimada por `h = (μ / n²)^(1/3) − Rₑ`, usando `n = MEAN_MOTION × 2π / 86400`, `μ = 398600,8 km³/s²` e `Rₑ = 6378,135 km` (constantes WGS-72 do satellite.js). Esse valor derivado do movimento médio não é a altitude instantânea nem substitui uma avaliação osculante completa.
+
+As sete faixas de inclinação/altitude são: `40–50° / 300–400 km`, `40–50° / 400–500 km`, `50–60° / 300–400 km`, `50–60° / 400–500 km`, `60–70° / 500–600 km`, `70–80° / 400–500 km` e `70–80° / 500–600 km`; cada intervalo inclui o limite inferior e exclui o superior. A classe polar usa `80–100°` e `200–1000 km`, conforme a faixa típica descrita pela ESA. Os intervalos foram escolhidos a partir dos agrupamentos encontrados no catálogo ACTIVE em 2026-10-06; são uma classificação visual própria e podem variar com novas posições ou mudanças na população ativa. A classe polar não afirma sincronismo solar: SSO exige verificar também a precessão do plano orbital. As faixas não são designações oficiais da SpaceX.
+
+O site [satellitemap.space](https://satellitemap.space/) foi consultado somente como referência comparativa fornecida para a interface. O projeto não reutiliza seu código, imagens, dados, paleta ou rótulos de shell, e não declara afiliação com o serviço. A referência não é fonte dos dados orbitais nem concede licença para reutilizar materiais do site.
 
 ---
 

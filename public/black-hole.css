@@ -115,6 +115,41 @@ body {
   pointer-events: none;
 }
 
+.selected-satellite-label {
+  position: absolute;
+  z-index: 3;
+  padding: 5px 8px;
+  border: 1px solid rgba(134, 217, 255, 0.35);
+  border-radius: 3px;
+  color: #b8eaff;
+  background: rgba(2, 8, 13, 0.86);
+  box-shadow: 0 0 16px rgba(72, 168, 255, 0.22);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  pointer-events: none;
+  transform: translate(-50%, -145%);
+  white-space: nowrap;
+}
+
+.satellite-hover-label {
+  position: absolute;
+  z-index: 3;
+  max-width: min(280px, calc(100% - 24px));
+  overflow: hidden;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+  color: var(--ink);
+  background: rgba(4, 6, 8, 0.92);
+  font-size: 0.7rem;
+  font-weight: 700;
+  pointer-events: none;
+  text-overflow: ellipsis;
+  transform: translate(12px, 12px);
+  white-space: nowrap;
+}
+
 .viewer-controls {
   position: absolute;
   z-index: 3;
@@ -202,11 +237,18 @@ body {
   color: var(--hot);
 }
 
-.close-viewer {
+.viewer-navigation {
   position: absolute;
   z-index: 3;
   right: 28px;
   top: 28px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: calc(100% - 56px);
+}
+
+.viewer-navigation button {
   padding: 11px 15px;
   border: 1px solid var(--line);
   border-radius: 4px;
@@ -220,9 +262,18 @@ body {
     background 180ms ease;
 }
 
-.close-viewer:hover {
+.viewer-navigation button:hover {
   border-color: var(--hot);
   background: rgba(255, 179, 107, 0.12);
+}
+
+.return-parent {
+  color: var(--cold) !important;
+}
+
+.return-parent:hover {
+  border-color: var(--cold) !important;
+  background: rgba(147, 201, 216, 0.12) !important;
 }
 
 .data-panel {
@@ -261,6 +312,133 @@ body {
   line-height: 1.45;
 }
 
+.artificial-satellite-panel {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.satellite-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.satellite-panel-heading h3 {
+  margin: 7px 0 0;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.satellite-panel-heading button {
+  flex: 0 0 auto;
+  padding: 9px 11px;
+  border: 1px solid rgba(147, 201, 216, 0.34);
+  border-radius: 4px;
+  color: var(--cold);
+  background: rgba(147, 201, 216, 0.08);
+  font:
+    700 0.68rem 'Manrope',
+    'Segoe UI',
+    sans-serif;
+  cursor: pointer;
+}
+
+.satellite-panel-heading button:hover,
+.satellite-panel-heading button[aria-pressed='true'] {
+  border-color: var(--cold);
+  color: #071014;
+  background: var(--cold);
+}
+
+.satellite-status,
+.satellite-data-note {
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.satellite-status {
+  min-height: 1.4em;
+  margin: 12px 0;
+}
+
+.satellite-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+  margin: 14px 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  list-style: none;
+}
+
+.satellite-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.69rem;
+  line-height: 1.25;
+}
+
+.satellite-legend li span {
+  flex: 0 0 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--satellite-color);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--satellite-color), transparent 45%);
+}
+
+.satellite-legend-total {
+  margin: -14px 0 14px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 650;
+}
+
+.selected-satellite-details {
+  margin: 12px 0;
+  padding: 0 12px;
+  border-left: 2px solid var(--cold);
+  background: rgba(147, 201, 216, 0.045);
+}
+
+.selected-satellite-details div {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.selected-satellite-details div:last-child {
+  border-bottom: 0;
+}
+
+.selected-satellite-details dt {
+  color: var(--muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.selected-satellite-details dd {
+  margin: 4px 0 0;
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.satellite-data-note {
+  margin: 14px 0 0;
+  font-size: 0.66rem;
+}
+
 .panel-note {
   display: flex;
   align-items: center;
@@ -295,8 +473,14 @@ body {
     left: 24px;
     bottom: 20px;
   }
-  .close-viewer {
+  .viewer-navigation {
     top: 20px;
     right: 20px;
+    gap: 6px;
+    max-width: calc(100% - 40px);
+  }
+  .viewer-navigation button {
+    padding: 9px 10px;
+    font-size: 0.68rem;
   }
 }

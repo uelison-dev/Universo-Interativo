@@ -16,6 +16,81 @@ const projectHighlights = [
 
 const patchNotes = [
   {
+    version: '6.39.25',
+    category: 'Visualização',
+    title: 'Marcadores de satélite menores',
+    changes: ['Esferas e halo de seleção foram reduzidos sem remover o destaque ao selecionar.']
+  },
+  {
+    version: '6.39.24',
+    category: 'Visualização',
+    title: 'Esferas de satélites e controles alinhados',
+    changes: [
+      'Satélites da inspeção terrestre agora usam esferas instanciadas; seleção destaca a esfera em dourado e hover identifica o nome.',
+      'Caixas de visibilidade da cena têm alinhamento e tamanho padronizados.'
+    ]
+  },
+  {
+    version: '6.39.23',
+    category: 'Exploração orbital',
+    title: 'Total de satélites na legenda',
+    changes: ['A legenda orbital informa quantos registros do catálogo foram propagados.']
+  },
+  {
+    version: '6.39.22',
+    category: 'Dados orbitais e transparência',
+    title: 'Faixas orbitais Starlink documentadas',
+    changes: [
+      'A legenda usa intervalos próprios de altitude e inclinação calculados a partir do OMM ACTIVE.',
+      'Fontes científicas, proveniência dos dados e limites da classificação foram incluídos nos créditos.'
+    ]
+  },
+  {
+    version: '6.39.21',
+    category: 'Exploração orbital',
+    title: 'Órbitas corrigidas e shells Starlink classificados',
+    changes: [
+      'Trajetórias usam o período corrigido pelo SGP4 e permanecem no referencial da Terra no instante da inspeção.',
+      'Pontos recebem as cores das categorias calculadas com altitude, inclinação e época de lançamento.'
+    ]
+  },
+  {
+    version: '6.39.20',
+    category: 'Exploração orbital',
+    title: 'Seleção e identificação de satélites artificiais',
+    changes: [
+      'A seleção destaca a órbita sem interromper a animação; o nome aparece ao passar o cursor sobre um satélite.',
+      'Pontos e órbitas usam cores por categoria, com legenda baseada nos grupos Starlink da referência.'
+    ]
+  },
+  {
+    version: '6.39.19',
+    category: 'Exploração orbital',
+    title: 'Satélites artificiais ao redor da Terra',
+    changes: [
+      'A inspeção dedicada da Terra pode carregar posições orbitais atualizadas do catálogo ACTIVE do CelesTrak.',
+      'Selecionar um satélite destaca sua órbita e mostra seus dados; o catálogo fica em cache local e a camada inicia desligada.'
+    ]
+  },
+  {
+    version: '6.39.18',
+    category: 'Visibilidade e desempenho',
+    title: 'Cinturões sob demanda',
+    changes: [
+      'Caixas independentes controlam os cinturões de asteroides e de Kuiper.',
+      'Os cinturões começam desativados e seus objetos são criados ao ativá-los.'
+    ]
+  },
+  {
+    version: '6.39.17',
+    category: 'Navegação e inspeção',
+    title: 'Retorno ao objeto hospedeiro',
+    changes: [
+      'A inspeção de um satélite agora permite voltar diretamente ao planeta ou TNO que ele orbita.',
+      'O retorno à galáxia continua disponível como uma ação separada.'
+    ]
+  },
+  {
     version: '6.39.16',
     category: 'Identidade visual',
     title: 'Logomarca sem fundo nos ícones do Windows',

@@ -38,6 +38,11 @@ O objetivo é oferecer uma experiência interativa e imersiva, combinando visual
 ### 🌌 Conteúdo Astronômico
 
 - Planetas, luas, TNOs, cometas e buracos negros.
+- Inspeção dedicada da Terra com uma camada opcional de satélites artificiais do catálogo OMM ACTIVE do CelesTrak, mantido em cache local e propagado por SGP4 em um Web Worker.
+- Hover identifica o satélite pelo nome; o clique seleciona o objeto e mostra seus dados, marcador e órbita.
+- Traçados orbitais usam o período corrigido pelo SGP4 e um referencial fixo no instante da inspeção, distinguindo a órbita espacial do ground track.
+- Satélites Starlink são agrupados por faixas próprias de inclinação e altitude nominal estimada a partir do movimento médio OMM; os rótulos não representam shells oficiais do operador.
+- A legenda distingue faixas LEO e polares com base em parâmetros orbitais, sem copiar nomes, cores ou dados de serviços de visualização de terceiros.
 - Overlays informativos com dados astronômicos.
 - Transição entre escala do Sistema Solar e escala interestelar.
 
@@ -47,6 +52,7 @@ O objetivo é oferecer uma experiência interativa e imersiva, combinando visual
 
 - **JavaScript (ES6)**
 - **Three.js**
+- **satellite.js** (propagação orbital SGP4/SDP4)
 - **Electron**
 - **HTML5 / CSS3**
 - **Node.js / npm**
@@ -118,14 +124,16 @@ Releases
 
 ## 📁 Estrutura do Código
 
-| Arquivo                 | Função principal                                                          |
-| :---------------------- | :------------------------------------------------------------------------ |
-| `main.js`               | Inicializa o Electron, abre o launcher e carrega a experiência principal. |
-| `public/launcher.html`  | Estrutura do launcher nativo do aplicativo.                               |
-| `public/index.html`     | Estrutura principal da experiência 3D.                                    |
-| `public/style.css`      | Estilos da interface sobreposta à cena 3D.                                |
-| `public/scripts/app.js` | Núcleo da cena, câmera, seleção e overlays.                               |
-| `src/data/*.js`         | Catálogo astronômico utilizado pelos objetos da cena.                     |
+| Arquivo                                         | Função principal                                                          |
+| :---------------------------------------------- | :------------------------------------------------------------------------ |
+| `main.js`                                       | Inicializa o Electron, abre o launcher e carrega a experiência principal. |
+| `public/launcher.html`                          | Estrutura do launcher nativo do aplicativo.                               |
+| `public/index.html`                             | Estrutura principal da experiência 3D.                                    |
+| `public/style.css`                              | Estilos da interface sobreposta à cena 3D.                                |
+| `public/scripts/app.js`                         | Núcleo da cena, câmera, seleção e overlays.                               |
+| `src/data/*.js`                                 | Catálogo astronômico utilizado pelos objetos da cena.                     |
+| `src/data/artificial_satellite_cache.js`        | Consulta e cache separado dos elementos OMM de satélites artificiais.     |
+| `public/scripts/artificial-satellite-worker.js` | Propagação SGP4 fora do loop de renderização.                             |
 
 ---
 
@@ -179,6 +187,6 @@ GitHub: https://github.com/uelison-dev
 
 ---
 
-**Versão atual:** 6.39.16 — consulte o [histórico de alterações](CHANGELOG.md) e a [política de versionamento](VERSIONING.md).
+**Versão atual:** 6.39.25 — consulte o [histórico de alterações](CHANGELOG.md) e a [política de versionamento](VERSIONING.md).
 
 © 2026 Uelison Ferreira. Todos os direitos reservados.

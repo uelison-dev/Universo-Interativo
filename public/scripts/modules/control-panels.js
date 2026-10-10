@@ -1,4 +1,12 @@
-export function initializeControlPanels({ planets, moons, majorTNOs, tnos, comets, kuiperGroup }) {
+export function initializeControlPanels({
+  planets,
+  moons,
+  majorTNOs,
+  tnos,
+  comets,
+  setAsteroidBeltVisible,
+  setKuiperBeltVisible
+}) {
   const visibilityBtn = document.getElementById('visibility-btn');
   const visibilityMenu = document.getElementById('visibility-menu');
   const reopenAudioBtn = document.getElementById('reopen-audio-btn');
@@ -10,13 +18,18 @@ export function initializeControlPanels({ planets, moons, majorTNOs, tnos, comet
   const toggleTnosOrbits = document.getElementById('toggle-tnos-orbits');
   const toggleCometsOrbits = document.getElementById('toggle-comets-orbits');
   const toggleMajorTnosOrbits = document.getElementById('toggle-major-tnos-orbits');
+  const toggleAsteroidBelt = document.getElementById('toggle-asteroid-belt');
+  const toggleKuiperBelt = document.getElementById('toggle-kuiper-belt');
   const syncButtonStates = () => {
     visibilityBtn.classList.toggle('active', visibilityMenu.classList.contains('visible'));
     reopenAudioBtn.classList.toggle('active', audioControls.classList.contains('visible'));
     infoBtn.classList.toggle('active', !navigationLegend.classList.contains('minimized'));
   };
 
-  kuiperGroup.visible = false;
+  toggleAsteroidBelt.checked = false;
+  toggleKuiperBelt.checked = false;
+  setAsteroidBeltVisible(false);
+  setKuiperBeltVisible(false);
   planets.forEach((planet) => planet.trail && (planet.trail.line.visible = false));
   majorTNOs.forEach((tno) => tno.trail && (tno.trail.line.visible = false));
   tnos.forEach((tno) => tno.trail && (tno.trail.line.visible = false));
@@ -94,8 +107,14 @@ export function initializeControlPanels({ planets, moons, majorTNOs, tnos, comet
     tnos.forEach((tno) => {
       if (tno.trail) tno.trail.line.visible = event.target.checked;
     });
+  });
 
-    kuiperGroup.visible = event.target.checked;
+  toggleAsteroidBelt.addEventListener('change', (event) => {
+    setAsteroidBeltVisible(event.target.checked);
+  });
+
+  toggleKuiperBelt.addEventListener('change', (event) => {
+    setKuiperBeltVisible(event.target.checked);
   });
 
   toggleCometsOrbits.addEventListener('change', (event) => {
