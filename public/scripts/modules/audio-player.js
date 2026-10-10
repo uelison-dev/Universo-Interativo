@@ -1,9 +1,5 @@
 export function initializeAudioPlayer(audioControls) {
-  const audioFiles = [
-    { name: 'Sfx Ufo Engine', path: 'sound/ufoengine.mp3' },
-    { name: 'Orbit Isolation', path: 'sound/orbit_isolation.wav' },
-    { name: 'Interstellar', path: 'sound/Interstellar_Hans_Zimmer.mp3' }
-  ];
+  const audioFiles = [{ name: 'Sfx Ufo Engine', path: 'sound/ufoengine.mp3' }];
 
   const audioTitle = document.getElementById('audio-title');
   const prevBtn = document.getElementById('prev-btn');
