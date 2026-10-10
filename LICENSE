@@ -1,63 +1,138 @@
 Copyright (c) 2026 Uelison Ferreira
 
-TODOS OS DIREITOS RESERVADOS
+LICENÇA PROPRIETÁRIA — CONSULTA, USO PESSOAL E REDISTRIBUIÇÃO
+GRATUITA DE CÓPIAS ORIGINAIS
+
+TODOS OS DIREITOS RESERVADOS, EXCETO PELAS PERMISSÕES EXPRESSAS ABAIXO.
 
 O código-fonte e os materiais originais desenvolvidos especificamente para o projeto
-"Universo Interativo" são proprietários de Uelison Ferreira, salvo quando expressamente
-indicado de outra forma neste repositório.
+"Universo Interativo" são proprietários de Uelison Ferreira, salvo quando indicado
+de outra forma. A publicação deste repositório não transforma o projeto em software
+open source nem implica concessão de direitos além dos expressamente previstos aqui.
 
-Este repositório é disponibilizado publicamente para fins de apresentação, portfólio,
-visualização e avaliação do projeto.
+1. TITULARIDADE E ESCOPO
 
-1. DIREITOS CONCEDIDOS
+Esta licença aplica-se exclusivamente ao código-fonte e aos materiais originais do
+Universo Interativo sobre os quais o titular detenha os direitos necessários para
+conceder as permissões descritas neste documento.
 
-A disponibilização pública deste repositório não concede, por si só, uma licença para
-copiar, modificar, distribuir, sublicenciar, vender ou criar produtos derivados a partir
-do código-fonte ou dos materiais originais do projeto.
+Bibliotecas, frameworks, imagens, texturas, fontes, dados e demais recursos de terceiros
+permanecem sujeitos às respectivas licenças e condições de uso. Consulte o arquivo
+THIRD-PARTY-NOTICES.md. Nenhuma cláusula desta licença restringe direitos concedidos
+separadamente por titulares de materiais de terceiros ou previstos na legislação.
 
-2. RESTRIÇÕES
+2. PERMISSÕES CONCEDIDAS
 
-Sem autorização prévia e expressa do titular dos direitos, não é permitido:
+O titular autoriza, gratuitamente, em caráter não exclusivo e para finalidades não
+comerciais, observadas as condições desta licença:
 
-- copiar ou reproduzir o código-fonte ou materiais originais do projeto;
-- redistribuir o código-fonte ou materiais originais, total ou parcialmente;
-- modificar o projeto ou criar trabalhos derivados a partir de seus componentes originais;
-- incorporar partes substanciais do projeto em outros produtos ou serviços;
-- comercializar, sublicenciar ou disponibilizar o projeto ou seus componentes originais
-  a terceiros;
-- utilizar o projeto ou seus componentes originais em produtos ou serviços comerciais.
+(a) visualizar, baixar, armazenar e estudar o código-fonte disponibilizado pelo autor,
+    para fins pessoais, educacionais, de avaliação e de portfólio;
 
-3. MATERIAIS DE TERCEIROS
+(b) instalar e executar cópias oficiais do aplicativo disponibilizadas pelo autor,
+    para uso pessoal, estudo, demonstração e avaliação não comercial;
 
-Nem todo arquivo ou recurso presente neste repositório é necessariamente de propriedade
-do titular deste projeto.
+(c) reproduzir e redistribuir gratuitamente cópias integrais e inalteradas das versões
+    do código-fonte publicadas pelo autor e/ou dos instaladores oficiais por ele
+    disponibilizados, desde que sejam atendidas todas as condições da seção 3.
 
-Recursos de terceiros, incluindo texturas, imagens, bibliotecas, frameworks, fontes,
-ícones e outros materiais, permanecem sujeitos às respectivas licenças e termos de uso.
+A autorização da alínea (c) não abrange versões modificadas, compilações realizadas por
+terceiros, partes isoladas do código-fonte ou materiais originais extraídos do projeto.
 
-Em especial, algumas texturas utilizadas no projeto foram obtidas do Solar System Scope
-e são distribuídas sob a licença Creative Commons Attribution 4.0 International (CC BY 4.0).
-Os termos aplicáveis a esses recursos estão descritos no arquivo THIRD-PARTY-NOTICES.md
-e na seção de créditos do README.md.
+3. CONDIÇÕES OBRIGATÓRIAS PARA REDISTRIBUIÇÃO
 
-Algumas imagens também foram geradas utilizando o Google Gemini. Esses materiais devem
-ser utilizados de acordo com os termos aplicáveis do Google e sem violação dos direitos
-de terceiros. A utilização de conteúdo gerado por IA não transforma automaticamente
-esses materiais em propriedade exclusiva do projeto.
+A redistribuição permitida na seção 2(c) depende do cumprimento cumulativo das
+seguintes condições:
 
-4. PROPRIEDADE E COMERCIALIZAÇÃO
+(a) INTEGRIDADE: distribuir a cópia original integralmente, sem alterações no código,
+    nos executáveis, nos recursos originais ou nos avisos legais. É permitida apenas a
+    compactação ou descompactação técnica que preserve integralmente os arquivos;
 
-Os direitos sobre o código e os materiais originais do projeto permanecem reservados
-ao titular. O projeto poderá ser distribuído, licenciado ou comercializado futuramente
-em condições definidas pelo titular, observadas as licenças e direitos aplicáveis aos
-materiais de terceiros.
+(b) CRÉDITOS: identificar claramente o autor da seguinte forma:
 
-5. AUSÊNCIA DE GARANTIA
+    "Universo Interativo — criado e desenvolvido por Uelison Ferreira.
+     Repositório oficial: https://github.com/uelison-dev/Universo-Interativo"
 
-O projeto é disponibilizado "como está", sem garantias de qualquer natureza, na medida
-permitida pela legislação aplicável.
+(c) DOCUMENTAÇÃO: ao redistribuir o código-fonte, manter integralmente os arquivos
+    LICENSE, README.md, THIRD-PARTY-NOTICES.md e demais avisos/licenças que acompanhem
+    a versão original. Ao redistribuir um instalador oficial, acompanhar o arquivo
+    original do instalador com uma cópia desta licença, os avisos de terceiros
+    pertinentes e o link para o repositório oficial, sem modificar o instalador;
 
-Para solicitar autorização de uso, reprodução, modificação, distribuição ou
-comercialização do projeto, entre em contato com o titular.
+(d) GRATUIDADE: não cobrar pelo acesso, download, cópia ou redistribuição e não
+    explorar comercialmente o projeto ou a sua redistribuição, inclusive por meio de
+    venda, assinatura, comissão ou comercialização de pacotes que o incluam;
 
-© 2026 Uelison Ferreira. Todos os direitos reservados.
+(e) IDENTIFICAÇÃO: caso a cópia seja disponibilizada fora dos canais oficiais, deixar
+    claro que se trata de redistribuição não oficial de uma versão original e
+    inalterada; não sugerir aprovação, parceria ou endosso do autor;
+
+(f) TERCEIROS: respeitar, além desta licença, todas as obrigações próprias dos
+    componentes de terceiros contidos na cópia, inclusive preservação de avisos de
+    copyright, licenças e atribuições exigidas pelos respectivos titulares.
+
+Compartilhar o link para a página oficial do projeto ou para suas Releases é permitido.
+
+4. ATOS NÃO AUTORIZADOS
+
+Salvo autorização prévia e expressa do titular, esta licença NÃO permite:
+
+(a) modificar o código-fonte ou os materiais originais proprietários do projeto, criar
+    ou distribuir versões derivadas ou publicar adaptações desses materiais;
+
+(b) distribuir versões modificadas, instaladores recompilados por terceiros, cópias
+    incompletas ou partes isoladas dos componentes originais proprietários;
+
+(c) incorporar código-fonte ou materiais originais proprietários do Universo Interativo
+    em outros produtos, aplicativos, serviços ou repositórios;
+
+(d) vender, alugar, sublicenciar, cobrar pelo acesso ou explorar comercialmente o
+    projeto, suas versões originais ou seus componentes proprietários;
+
+(e) remover, ocultar ou alterar os créditos do autor, esta licença ou os avisos de
+    direitos autorais aplicáveis; ou
+
+(f) utilizar o nome, a marca ou a identidade visual do projeto de forma que sugira
+    afiliação ou endosso inexistentes, ressalvada a identificação da cópia original
+    permitida por esta licença.
+
+As restrições acima referentes a materiais proprietários do Universo Interativo não
+se aplicam para suprimir permissões concedidas pelas licenças de componentes de
+terceiros.
+
+5. RECURSOS DE TERCEIROS
+
+Algumas texturas provenientes de Solar System Scope — Solar Textures são indicadas
+como licenciadas sob Creative Commons Attribution 4.0 International (CC BY 4.0).
+Essas texturas continuam sujeitas aos direitos e deveres da CC BY 4.0, inclusive suas
+obrigações de atribuição, independentemente das restrições impostas ao código original
+do Universo Interativo.
+
+Determinados recursos visuais foram gerados com auxílio do Google Gemini. A utilização
+desses recursos deve respeitar os termos aplicáveis, a legislação e eventuais direitos
+de terceiros sobre os elementos representados.
+
+Bibliotecas e outros componentes distribuídos com o aplicativo possuem licenças
+próprias, que devem ser preservadas e observadas quando aplicável. Consulte
+THIRD-PARTY-NOTICES.md e os arquivos de licença de cada dependência.
+
+6. RESERVA DE DIREITOS E LICENCIAMENTO FUTURO
+
+Todos os direitos não concedidos expressamente por esta licença permanecem reservados
+à titularidade correspondente. O autor pode oferecer versões ou licenças distintas
+do projeto futuramente, inclusive para fins comerciais, respeitados os direitos de
+terceiros e as permissões válidas aplicáveis às cópias já recebidas.
+
+7. AUSÊNCIA DE GARANTIA
+
+O projeto é disponibilizado "como está", sem garantias de qualquer natureza, na
+medida permitida pela legislação aplicável.
+
+8. AUTORIZAÇÕES ADICIONAIS
+
+Qualquer uso fora das permissões expressas desta licença requer autorização prévia e
+expressa do titular dos direitos correspondentes. Para solicitações de autorização,
+consulte o perfil do autor no GitHub: https://github.com/uelison-dev
+
+© 2026 Uelison Ferreira. Todos os direitos reservados, exceto pelas permissões
+expressamente concedidas nesta licença.

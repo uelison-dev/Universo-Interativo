@@ -72,7 +72,7 @@ Para utilizar o **Universo Interativo**, baixe o instalador da versão desejada 
 4. Execute o instalador e siga as instruções apresentadas.
 5. Após a instalação, abra o **Universo Interativo** pelo atalho criado no Windows.
 
-> **Importante:** o instalador é destinado aos usuários finais. O código-fonte disponibilizado neste repositório é apresentado publicamente para fins de portfólio, visualização e avaliação, conforme os termos definidos no arquivo `LICENSE`.
+> **Importante:** o instalador é destinado aos usuários finais. O código-fonte também é disponibilizado para consulta, estudo e avaliação. A redistribuição gratuita de **cópias originais e inalteradas**, com os créditos obrigatórios e a documentação correspondente, é permitida nas condições do arquivo [`LICENSE`](LICENSE). A comercialização, a modificação e a distribuição de versões alteradas dos materiais proprietários continuam proibidas.
 
 ### 🧑‍💻 Desenvolvimento
 
@@ -170,9 +170,15 @@ Para uma descrição mais detalhada dos materiais de terceiros, consulte [`THIRD
 
 ## 📄 Licença
 
-O **código-fonte e os materiais originais do Universo Interativo são proprietários**.
+O **código-fonte e os materiais originais do Universo Interativo permanecem proprietários**, com direitos autorais reservados ao desenvolvedor **Uelison Ferreira**.
 
-Este repositório público é disponibilizado principalmente para **portfólio, visualização e avaliação do projeto**. A publicação do código no GitHub não concede autorização para copiar, modificar, redistribuir, comercializar ou incorporar o projeto em outros produtos ou serviços.
+A licença autoriza **visualização, download, estudo e uso pessoal não comercial**, além da **redistribuição gratuita de cópias originais, completas e inalteradas** do código-fonte publicado e dos instaladores oficiais, desde que sejam preservados os créditos, a documentação e os avisos obrigatórios de terceiros.
+
+Para redistribuir uma cópia, identifique claramente a autoria, inclua o link para este repositório e siga as condições do `LICENSE`. Ao compartilhar o código-fonte, mantenha os arquivos `LICENSE`, `README.md` e `THIRD-PARTY-NOTICES.md`. Ao compartilhar um instalador oficial, disponibilize a licença e os avisos pertinentes junto ao arquivo original, sem modificar o instalador.
+
+**Não são autorizadas modificações dos materiais proprietários, criação ou distribuição de versões derivadas, comercialização, incorporação em outros produtos ou redistribuição de partes isoladas do código original**, salvo autorização expressa do autor.
+
+> **Atenção:** o código estar publicamente acessível não torna o projeto _Open Source_. Esta é uma licença proprietária com permissão limitada para redistribuição não comercial de cópias intactas.
 
 Os materiais de terceiros presentes no projeto **não estão abrangidos pela licença proprietária do projeto** e permanecem sujeitos às suas respectivas licenças e termos de uso.
 

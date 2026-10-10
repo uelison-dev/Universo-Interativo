@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Vuenar/Sistema_Solar_Interativo_ADS.git"
+    "url": "git+https://github.com/uelison-dev/Universo-Interativo.git"
   },
   "keywords": [
     "electron",
@@ -102,9 +102,9 @@
     "prettier": "^3.8.2"
   },
   "bugs": {
-    "url": "https://github.com/Vuenar/Sistema_Solar_Interativo_ADS/issues"
+    "url": "https://github.com/uelison-dev/Universo-Interativo/issues"
   },
-  "homepage": "https://github.com/Vuenar/Sistema_Solar_Interativo_ADS#readme",
+  "homepage": "https://github.com/uelison-dev/Universo-Interativo#readme",
   "lint-staged": {
     "*.{js,mjs}": [
       "eslint --fix",

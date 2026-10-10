@@ -101,6 +101,10 @@ Materiais de terceiros, incluindo texturas, imagens, bibliotecas, frameworks, fo
 
 Nenhuma disposição da licença proprietária do projeto deve ser interpretada como uma tentativa de relicenciar, restringir ou alterar os direitos concedidos pelos respectivos titulares de materiais de terceiros.
 
+A licença proprietária do Universo Interativo permite a redistribuição **gratuita de cópias originais e inalteradas** do projeto sob determinadas condições, mas essa permissão refere-se apenas aos direitos que o autor pode conceder sobre seus próprios materiais. Quando uma cópia contiver componentes de terceiros, a pessoa que a redistribuir também deverá respeitar as licenças e os termos específicos desses componentes. A licença do projeto não substitui essas obrigações.
+
+Os avisos legais e de atribuição de terceiros que acompanham uma versão devem ser preservados e disponibilizados com as cópias redistribuídas, conforme exigido por cada licença aplicável.
+
 ---
 
 ## 5. Responsabilidade pelo uso dos materiais
